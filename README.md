@@ -208,6 +208,19 @@ preview switches (need `DEV_UNLOCK_ALL=true`):
 | `/?preview=finale` | Nov 28: every lamp, fireworks |
 | `/?sky=night` (`dawn`, `day`, `dusk`), `&rain=1` | force the sky |
 
+### Refreshing the README screenshots
+
+As doors ship, re-shoot the images in [`docs/screenshots/`](docs/screenshots/):
+
+```bash
+pnpm dev            # terminal 1 (needs DEV_UNLOCK_ALL=true)
+pnpm screenshots    # terminal 2 → retina PNGs, about 45 seconds
+```
+
+It drives your installed Chrome or Edge headlessly (no extra packages) and
+waits for every animation to finish before each shot. `ONLY=day,phone pnpm
+screenshots` re-shoots just some of them.
+
 ## How it's built
 
 ```
