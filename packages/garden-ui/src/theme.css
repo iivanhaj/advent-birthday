@@ -1,0 +1,34 @@
+/*
+ * Tailwind v4 reads design tokens from @theme. Every --color-* here becomes
+ * bg-*, text-*, border-* ... utilities. Keep these in sync with tokens.ts.
+ */
+@theme {
+  --color-paper: #fbf1ee;
+  --color-line: #9e3b4c;
+  --color-glass: #f3d9d6;
+  --color-glow: #fbe3b0;
+  --color-kraft: #dcc19a;
+  --color-kraft-ink: #4a3424;
+  --color-night: #1e1b3a;
+}
+
+/* `inline` because these point at variables set by next/font at runtime. */
+@theme inline {
+  --font-serif: var(--font-playfair), Georgia, serif;
+  --font-display: var(--font-righteous), ui-rounded, system-ui, sans-serif;
+  --font-hand: var(--font-caveat), "Segoe Print", cursive;
+  --font-body: var(--font-nunito), ui-rounded, system-ui, sans-serif;
+}
+
+/* Subtle paper grain (SVG noise, no image file). */
+@utility paper-grain {
+  background-color: var(--color-paper);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .2 0 0 0 0 .2 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Kraft paper for tags and cards. */
+@utility kraft {
+  background-color: var(--color-kraft);
+  color: var(--color-kraft-ink);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='k'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .3 0 0 0 0 .2 0 0 0 0 .1 0 0 0 .12 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23k)'/%3E%3C/svg%3E");
+}
