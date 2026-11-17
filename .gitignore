@@ -12,3 +12,6 @@ packages/lsystem/target/
 packages/lsystem/pkg/
 # local Claude Code / editor config
 .claude/
+
+# written by `next dev` on every start (hints for AI coding tools)
+apps/web/AGENTS.md
