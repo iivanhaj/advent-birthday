@@ -5,7 +5,7 @@ illustrated building with **11 windows**, one per day from Nov 18 to Nov 28.
 Every day I ship one small build (a "door"), and its window lights up,
 **live, the moment I push to GitHub**.
 
-![The building by day: windows open onto tiny rooms, today's tag hangs from window 8](docs/screenshots/day.jpg)
+![The building by day: windows open onto tiny rooms; hovering window 5 shows its kraft tag](docs/screenshots/day.png)
 
 ## What you're looking at
 
@@ -22,12 +22,12 @@ Every day I ship one small build (a "door"), and its window lights up,
 - **The lights are my progress.** Push code on a door's day and its shutters
   swing open; after sunset, every window I've worked on is lamp-lit.
 
-![The same building at night: windows I've pushed to are lamp-lit, the rest stay dark](docs/screenshots/night.jpg)
+![The same building at night: windows I've pushed to are lamp-lit, the rest stay dark](docs/screenshots/night.png)
 
 - **Nov 28, the finale:** every window lights up floor by floor, the cake
   appears on the top floor, and fine-line fireworks go off over the roof.
 
-![The finale at dusk: every window lit, the cake on the top floor, fireworks over the roof](docs/screenshots/finale.jpg)
+![The finale at dusk: every window lit, the cake on the top floor, fireworks over the roof](docs/screenshots/finale.png)
 
 Also: the building draws itself in when the page loads, rooms shift with your
 mouse (or your phone's tilt) like a diorama, shutters clack (sound is off
