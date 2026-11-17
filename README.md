@@ -13,7 +13,10 @@ Every day I ship one small build (a "door"), and its window lights up,
   the tiny room inside; it hints at that day's build (a koi tank for the GPU
   koi pond, a record player for the music door, a letter for the time-locked
   letter…). Click an open window and the camera **flies through it** into that
-  door's page.
+  door's page, where the room fills the screen and that day's build lives:
+
+  ![Door 4's page: the koi tank room fills the screen under a kraft title tag](docs/screenshots/door.png)
+
 - **Future windows stay shuttered.** The server decides what's open using
   India time, so changing your laptop clock doesn't help. Sealed door pages
   never even send their content to the browser.
@@ -30,10 +33,18 @@ Every day I ship one small build (a "door"), and its window lights up,
 ![The finale at dusk: every window lit, the cake on the top floor, fireworks over the roof](docs/screenshots/finale.png)
 
 Also: the building draws itself in when the page loads, rooms shift with your
-mouse (or your phone's tilt) like a diorama, shutters clack (sound is off
-until you turn it on), there's a **zoom button** (🔍, then ↑/↓ to change
-floors) for anyone who wants things bigger, and on phones a brass **elevator**
-rides between floors.
+mouse (or your phone's tilt) like a diorama, and shutters clack (sound is off
+until you turn it on).
+
+**Made for every screen and every eye.** The 🔍 **zoom button** enlarges the
+building about 1.9× one floor at a time (↑/↓ to change floors, Esc to zoom
+out), and on phones a brass **elevator** dial rides between floors.
+
+<p align="center">
+  <img src="docs/screenshots/zoom.png" width="62%" alt="Zoomed in on the first floor: big windows, readable numbers, and the elevator dial on the right" />
+  &nbsp;
+  <img src="docs/screenshots/phone.png" width="27%" alt="The building at night on a phone, with the brass elevator dial beside it" />
+</p>
 
 ## The 11 doors
 
