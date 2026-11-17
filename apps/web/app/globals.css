@@ -1,0 +1,73 @@
+@import "tailwindcss";
+@import "@birthday-garden/garden-ui/theme.css";
+
+/* Tailwind only generates classes it finds in scanned files; include the shared package. */
+@source "../../../packages/garden-ui/src";
+
+html {
+  color-scheme: light;
+}
+
+/* ---- sky ---- */
+.sky-twinkle {
+  animation: twinkle 3.4s ease-in-out infinite;
+}
+@keyframes twinkle {
+  50% {
+    opacity: 0.2;
+    transform: scale(0.6);
+  }
+}
+.sky-drift {
+  left: -220px;
+  animation: drift linear infinite;
+}
+@keyframes drift {
+  to {
+    transform: translateX(calc(100vw + 440px));
+  }
+}
+.sky-rain {
+  background-image: repeating-linear-gradient(105deg, transparent 0 22px, rgba(251, 241, 238, 0.35) 22px 23px, transparent 23px 46px);
+  background-size: 46px 160px;
+  animation: rain 0.45s linear infinite;
+  opacity: 0.8;
+}
+@keyframes rain {
+  to {
+    background-position: -30px 160px;
+  }
+}
+
+/* ---- lamplight: a slow, uneven flicker like a real bulb ---- */
+.lamp-flicker {
+  animation: flicker 5.5s steps(1, end) infinite;
+}
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  41% { opacity: 0.93; }
+  43% { opacity: 1; }
+  71% { opacity: 0.96; }
+  73% { opacity: 0.88; }
+  75% { opacity: 1; }
+}
+
+/* locked window: the shutters rattle but won't open */
+.window-rattle {
+  animation: rattle 0.4s ease-in-out;
+}
+@keyframes rattle {
+  20% { transform: translateX(-3px); }
+  45% { transform: translateX(3px); }
+  70% { transform: translateX(-2px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .window-rattle,
+  .sky-twinkle,
+  .sky-drift,
+  .sky-rain,
+  .lamp-flicker {
+    animation: none;
+  }
+}
