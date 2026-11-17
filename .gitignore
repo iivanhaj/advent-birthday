@@ -1,0 +1,14 @@
+node_modules/
+.next/
+out/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+.env
+.env*.local
+.DS_Store
+# Door 5 (Rust -> WASM) build output
+packages/lsystem/target/
+packages/lsystem/pkg/
+# local Claude Code / editor config
+.claude/

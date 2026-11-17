@@ -1,0 +1,10 @@
+{
+  "name": "advent-birthday",
+  "private": true,
+  "packageManager": "pnpm@10.28.2",
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm --filter web build",
+    "typecheck": "pnpm -r typecheck"
+  }
+}

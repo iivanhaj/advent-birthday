@@ -1,0 +1,22 @@
+{
+  "name": "@birthday-garden/garden-ui",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./theme.css": "./src/theme.css"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "framer-motion": "^14.14.0",
+    "react": "^19.3.1",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "framer-motion": ">=12",
+    "react": ">=19"
+  }
+}
