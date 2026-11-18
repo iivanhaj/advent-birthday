@@ -138,7 +138,18 @@ await shot("zoom", "/?preview=mixed&sky=day", {
     await sleep(2500);
   },
 });
-await shot("door", "/door/4?preview=mixed", { wait: 4000 });
+// Door 1's greenhouse, with the card for one flower showing
+await shot("greenhouse", "/door/1?preview=mixed", {
+  h: 1000,
+  wait: 6000,
+  before: async () => {
+    const r = await evaluate(
+      `(() => { const el = [...document.querySelectorAll('.md\\\\:block rect.cursor-pointer')][4]; if (!el) return null; const b = el.getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 2 }; })()`,
+    );
+    if (r) await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: r.x, y: r.y });
+    await sleep(1000);
+  },
+});
 await shot("phone", "/?preview=mixed&sky=night", {
   w: 390,
   h: 844,
