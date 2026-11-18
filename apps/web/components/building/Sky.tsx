@@ -76,9 +76,10 @@ export function Sky({ sky, sx, sy }: { sky: SkyData; sx: MotionValue<number>; sy
       {/* drifting fine-line clouds */}
       <motion.div className="absolute inset-0" style={{ x: cloudX }}>
         {[
-          { top: "14%", w: 150, dur: 90, delay: -20, op: 0.7 },
-          { top: "26%", w: 110, dur: 120, delay: -70, op: 0.5 },
-          ...(sky.cloudy || sky.raining ? [{ top: "8%", w: 190, dur: 75, delay: -40, op: 0.8 }, { top: "34%", w: 140, dur: 100, delay: -5, op: 0.6 }] : []),
+          // kept faint: the sky is backdrop, the building is the subject
+          { top: "14%", w: 150, dur: 90, delay: -20, op: 0.45 },
+          { top: "26%", w: 110, dur: 120, delay: -70, op: 0.3 },
+          ...(sky.cloudy || sky.raining ? [{ top: "8%", w: 190, dur: 75, delay: -40, op: 0.55 }, { top: "34%", w: 140, dur: 100, delay: -5, op: 0.4 }] : []),
         ].map((c, i) => (
           <svg
             key={i}
@@ -86,7 +87,7 @@ export function Sky({ sky, sx, sy }: { sky: SkyData; sx: MotionValue<number>; sy
             className="sky-drift absolute"
             style={{ top: c.top, width: c.w, animationDuration: `${c.dur}s`, animationDelay: `${c.delay}s`, opacity: c.op }}
           >
-            <path d={CLOUD} fill={night ? "rgba(58,47,91,0.6)" : "rgba(251,241,238,0.55)"} stroke={lineOnSky} strokeWidth="1" vectorEffect="non-scaling-stroke" />
+            <path d={CLOUD} fill={night ? "rgba(58,47,91,0.6)" : "rgba(251,241,238,0.55)"} stroke={lineOnSky} strokeOpacity={0.7} strokeWidth="1" vectorEffect="non-scaling-stroke" />
           </svg>
         ))}
       </motion.div>
