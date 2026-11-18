@@ -34,7 +34,7 @@ export function Constellations({ pushes, fresh, isPhone, phase, todayDoor, built
   const night = phase === "night" || phase === "dusk";
   const ink = night ? "#FBF1EE" : "var(--color-line)";
   const spots = anchors(isPhone, side);
-  const radius = isPhone ? 22 : 36;
+  const radius = isPhone ? 27 : 54;
   const groups = [...pushesByDoor(pushes).entries()].map(([door, list]) => constellation(door, list, spots[door], radius));
 
   return (
@@ -53,7 +53,7 @@ export function Constellations({ pushes, fresh, isPhone, phase, todayDoor, built
           </radialGradient>
         </defs>
         {groups.map((c) => (
-          <g key={c.door}>
+          <g key={c.door} className="constellation-drift" style={{ animationDelay: `${-c.door * 2.3}s`, animationDuration: `${16 + (c.door % 4) * 3}s` }}>
             {c.stars.slice(1).map((s, i) => {
               const a = c.stars[i];
               const isNew = fresh.has(s.push.delivery_id);
@@ -80,7 +80,7 @@ export function Constellations({ pushes, fresh, isPhone, phase, todayDoor, built
                 <g key={s.push.delivery_id} transform={`translate(${s.x} ${s.y})`}>
                   <g className={isNew ? "star-in" : "star-twinkle"} style={{ animationDelay: isNew ? "0.6s" : `${-((i * 1.7 + c.door) % 5)}s` }}>
                     <circle r={s.size * 3.2} fill="url(#star-glow)" />
-                    <path d={starPath(s.size)} fill={ink} />
+                    <path d={starPath(s.size * 1.15)} fill={ink} />
                   </g>
                   <circle
                     r={11}
@@ -97,6 +97,13 @@ export function Constellations({ pushes, fresh, isPhone, phase, todayDoor, built
             </text>
           </g>
         ))}
+        {/* the odd shooting star, only after dark */}
+        {night && (
+          <g stroke="#FFF6E0" strokeWidth={1.6} strokeLinecap="round" fill="none">
+            <path d={isPhone ? "M40 -230 L190 -170" : "M-260 60 L-60 150"} pathLength={1} className="shooting-star" vectorEffect="non-scaling-stroke" />
+            <path d={isPhone ? "M460 -150 L330 -90" : "M760 40 L560 140"} pathLength={1} className="shooting-star" style={{ animationDelay: "6.5s" }} vectorEffect="non-scaling-stroke" />
+          </g>
+        )}
       </svg>
 
       {/* commit card for the hovered star, positioned in building units (%) so it sticks to the star */}
