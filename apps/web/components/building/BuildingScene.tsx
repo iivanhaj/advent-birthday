@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useTransform } from "framer-motion";
 import { springs } from "@birthday-garden/garden-ui";
-import { FLOORS, VIEW_H, WINDOWS } from "@/lib/building";
+import { FLOORS, VIEW_H, WINDOWS, pctBox } from "@/lib/building";
 import { DOOR_META, doorState, type CalendarDoor, type DoorRow } from "@/lib/doors";
 import type { Sky as SkyData } from "@/lib/sky";
 import { browserClient } from "@/lib/supabase/browser";
@@ -14,7 +14,7 @@ import { Fireworks } from "./Fireworks";
 import { Room } from "./Room";
 import { Sky } from "./Sky";
 import { useParallax } from "./useParallax";
-import { Window } from "./Window";
+import { Window, type Peek } from "./Window";
 import { Constellations } from "./Constellations";
 import { WindowBoxes } from "./WindowBoxes";
 import { useLivePushes } from "./useLivePushes";
@@ -172,6 +172,10 @@ export function BuildingScene({ initialDoors, todayDoor, sleeps, dateLabels, sky
   }, [built, isPhone, todayFloor]);
   const swipeStart = useRef<number | null>(null);
 
+  // ---- which window is being peeked at (its card floats above the whole building) ----
+  const [peek, setPeek] = useState<Peek | null>(null);
+  const onPeek = useCallback((p: Peek | null, n: number) => setPeek((cur) => (p ? p : cur?.win.n === n ? null : cur)), []);
+
   // ---- fly through a window into its door page ----
   const [flying, setFlying] = useState<{ n: number; rect: DOMRect; lit: boolean } | null>(null);
   const onFly = useCallback(
@@ -260,12 +264,15 @@ export function BuildingScene({ initialDoors, todayDoor, sleeps, dateLabels, sky
                     sy={sy}
                     soundOn={soundOn}
                     onFly={onFly}
+                    onPeek={onPeek}
                   />
               );
             })}
 
           {/* and a flower in that day's window box (in front of the windows) */}
           {intro && <WindowBoxes pushes={pushes} fresh={fresh} built={built} />}
+
+          <AnimatePresence>{peek && <PeekCard key={peek.win.n} peek={peek} />}</AnimatePresence>
 
           {intro && finale && built && <Fireworks color={night ? "#FBE3B0" : "var(--color-line)"} />}
 
@@ -341,6 +348,43 @@ export function BuildingScene({ initialDoors, todayDoor, sleeps, dateLabels, sky
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+/**
+ * The label card for the window being peeked at. It lives in its own layer
+ * above the building (so it's never covered by the floor below), while the
+ * window itself stays behind its window box. It hangs below the window, except
+ * on the ground floor where it would run off the screen, so it sits above;
+ * windows near the edges align it to that edge.
+ */
+function PeekCard({ peek }: { peek: Peek }) {
+  const { win, title, dateLabel, locked, open } = peek;
+  const above = win.floor === "ground";
+  const cx = win.x + win.w / 2;
+  const align = cx < 140 ? "left" : cx > 340 ? "right" : "center";
+  const pos = [
+    above ? "bottom-[calc(100%+10px)]" : "top-[calc(100%+20px)]",
+    align === "left" ? "left-0" : align === "right" ? "right-0" : "left-1/2",
+  ].join(" ");
+  const x = align === "center" ? "-50%" : "0%";
+  return (
+    <div className="pointer-events-none absolute z-40" style={pctBox(win.x, win.y, win.w, win.h)}>
+      <motion.div
+        className={`absolute w-max max-w-64 rounded-md border border-line/25 bg-paper px-3.5 py-2.5 text-line shadow-[0_12px_32px_-12px_rgba(78,30,40,0.35)] ${pos}`}
+        initial={{ opacity: 0, y: above ? 4 : -4, x }}
+        animate={{ opacity: 1, y: 0, x, transition: { duration: 0.18, ease: "easeOut" } }}
+        exit={{ opacity: 0, x, transition: { duration: 0.12 } }}
+      >
+        <p className="font-sans text-[10px] font-medium tracking-[0.16em] uppercase opacity-70">
+          No. {String(win.n).padStart(2, "0")} · {dateLabel}
+        </p>
+        <p className="mt-1 font-serif text-[17px] leading-snug">{locked ? "Sealed until then" : title}</p>
+        {!locked && (
+          <p className="mt-1.5 font-sans text-xs font-medium opacity-80">{open ? "Step inside →" : "Tap to open the shutters"}</p>
+        )}
+      </motion.div>
     </div>
   );
 }

@@ -1,9 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion, useTransform, type MotionValue } from "framer-motion";
-import { springs } from "@birthday-garden/garden-ui";
+import { motion, useTransform, type MotionValue } from "framer-motion";
 import { FRONT_DOOR, SILL, pctBox, windowRadius, type BuildingWindow } from "@/lib/building";
 import type { DoorState } from "@/lib/doors";
 import type { SkyPhase } from "@/lib/sky";
@@ -28,12 +27,16 @@ type Props = {
   /** Phone elevator: windows on other floors fade back. */
   dimmed?: boolean;
   onFly: (n: number, el: HTMLElement, lit: boolean) => void;
+  /** Tells the scene which window is being peeked at, so it can show the label card above everything. */
+  onPeek: (peek: Peek | null, n: number) => void;
 };
+
+export type Peek = { win: BuildingWindow; title: string; dateLabel: string; locked: boolean; open: boolean };
 
 /** Louvred shutter slats: thin lines every 7px, drawn with a gradient (no extra elements). */
 const LOUVERS = "repeating-linear-gradient(180deg, transparent 0 6px, color-mix(in srgb, var(--color-line) 45%, transparent) 6px 7px)";
 
-export function Window({ win, state, title, dateLabel, isToday, phase, lampOn, lampDelay, built, sx, sy, soundOn, dimmed = false, onFly }: Props) {
+export function Window({ win, state, title, dateLabel, isToday, phase, lampOn, lampDelay, built, sx, sy, soundOn, dimmed = false, onFly, onPeek }: Props) {
   const router = useRouter();
   const ref = useRef<HTMLButtonElement>(null);
   const [hover, setHover] = useState(false);
@@ -53,20 +56,13 @@ export function Window({ win, state, title, dateLabel, isToday, phase, lampOn, l
 
   const night = phase === "night" || phase === "dusk";
 
-  // Where the hover tag hangs (see the comment on the tag below).
-  const above = win.floor === "ground";
-  const cx = win.x + win.w / 2;
-  const align = cx < 140 ? "left" : cx > 340 ? "right" : "center";
-  const tagPos = {
-    above,
-    x: align === "center" ? "-50%" : "0%",
-    className: [
-      above ? "bottom-[calc(100%+10px)] origin-bottom" : "top-[calc(100%+18px)] origin-top",
-      align === "left" ? "left-0" : align === "right" ? "right-0" : "left-1/2",
-    ].join(" "),
-  };
   const glass = lampOn ? undefined : night ? "#2B2548" : "var(--color-glass)";
   const roomColor = lampOn || !night ? "var(--color-line)" : "rgba(251,241,238,0.35)";
+
+  const peeking = (hover || pinned) && built;
+  useEffect(() => {
+    onPeek(peeking ? { win, title, dateLabel, locked, open } : null, win.n);
+  }, [peeking, win, title, dateLabel, locked, open, onPeek]);
 
   function activate() {
     if (locked) {
@@ -95,8 +91,8 @@ export function Window({ win, state, title, dateLabel, isToday, phase, lampOn, l
     <div
       ref={rootRef}
       className="absolute"
-      // The hovered window rises above its neighbours so its hanging tag isn't covered by the floor below.
-      style={{ ...pctBox(win.x, win.y, win.w, win.h), zIndex: hover || pinned ? 35 : 5, opacity: dimmed ? 0.45 : 1, transition: "opacity 0.5s" }}
+      // Always behind the window-box layer (z-8): the flowers sit outside, in front of the glass.
+      style={{ ...pctBox(win.x, win.y, win.w, win.h), zIndex: 5, opacity: dimmed ? 0.45 : 1, transition: "opacity 0.5s" }}
     >
       <button
         ref={ref}
@@ -184,28 +180,6 @@ export function Window({ win, state, title, dateLabel, isToday, phase, lampOn, l
         </span>
       )}
 
-      {/*
-        Kraft tag on hover/focus. It hangs below the window, except on the
-        ground floor where there's no room below (it would be cut off by the
-        screen edge), so it hangs above instead. Windows near the left/right
-        edge align the tag to that edge rather than centring it, for the same reason.
-      */}
-      <AnimatePresence>
-        {(hover || pinned) && built && (
-          <motion.div
-            className={`kraft pointer-events-none absolute z-40 w-max max-w-60 px-4 py-2.5 shadow-[0_10px_22px_-10px_rgba(74,52,36,0.65)] ${tagPos.className}`}
-            initial={{ opacity: 0, y: tagPos.above ? 8 : -8, rotate: -6, x: tagPos.x }}
-            animate={{ opacity: 1, y: 0, rotate: -1.5, x: tagPos.x, transition: springs.bouncy }}
-            exit={{ opacity: 0, y: tagPos.above ? 6 : -6, x: tagPos.x, transition: { duration: 0.15 } }}
-          >
-            <p className="font-hand text-xl leading-none">
-              no. {win.n} · {dateLabel}
-            </p>
-            <p className="mt-1 font-serif text-lg leading-tight italic">{locked ? "sealed. no peeking." : title}</p>
-            {!locked && <p className="mt-1.5 font-hand text-lg leading-none opacity-85">{open ? "click to step inside →" : "tap to open"}</p>}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
