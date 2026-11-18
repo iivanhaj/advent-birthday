@@ -2,10 +2,20 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { DoorFrame } from "@birthday-garden/garden-ui";
-import { getCalendarDoors } from "@/lib/calendar-data";
+import { getCalendarDoors, getPushes } from "@/lib/calendar-data";
 import { DOOR_META } from "@/lib/doors";
-import { DOOR_COUNT, dateLabel, doorDate, isDoorReachable } from "@/lib/unlock";
+import { DOOR_COUNT, dateLabel, doorDate, doorForDate, istDate, isDoorReachable } from "@/lib/unlock";
 import { DoorPlaceholder, SealedDoor } from "./placeholders";
+import { StarMap } from "./StarMap";
+
+/** Each door's "what I learned" card (written after shipping). */
+const LEARNED: Record<number, string[]> = {
+  1: [
+    "Supabase Realtime turns a Postgres INSERT into a websocket event, so a push lights a star in about a second",
+    "seed a PRNG with the commit SHA and the same push draws the same star on every screen",
+    "Math.cos can differ in the last digit between Node and browsers, enough to break hydration",
+  ],
+};
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +37,7 @@ export default async function DoorPage({ params, searchParams }: Params) {
 
   const label = dateLabel(doorDate(n));
   const back = (
-    <Link href="/" className="font-hand text-2xl text-line underline decoration-dashed underline-offset-4 hover:opacity-70">
+    <Link href="/" className={`font-hand text-2xl underline ${n === 1 ? "text-paper" : "text-line"} decoration-dashed underline-offset-4 hover:opacity-70`}>
       ← back to the building
     </Link>
   );
@@ -36,11 +46,25 @@ export default async function DoorPage({ params, searchParams }: Params) {
   // gets sent to the browser at all, so there's nothing to peek at.
   if (!isDoorReachable(n)) return <SealedDoor n={n} dateLabel={label} backLink={back} />;
 
-  const door = (await getCalendarDoors((await searchParams).preview)).find((d) => d.n === n);
+  const preview = (await searchParams).preview;
+  const learned = LEARNED[n] ?? ["(fill me in after shipping)"];
+
+  // Door 1: the star map of every push.
+  if (n === 1) {
+    const pushes = await getPushes(preview);
+    const dateLabels = Object.fromEntries(Array.from({ length: DOOR_COUNT }, (_, i) => [i + 1, dateLabel(doorDate(i + 1))]));
+    return (
+      <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
+        <StarMap initialPushes={pushes} todayDoor={doorForDate(istDate())} dateLabels={dateLabels} />
+      </DoorFrame>
+    );
+  }
+
+  const door = (await getCalendarDoors(preview)).find((d) => d.n === n);
   const lit = Boolean(door?.shipped_at);
 
   return (
-    <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={["(fill me in after shipping)"]}>
+    <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
       <DoorPlaceholder n={n} lit={lit} />
     </DoorFrame>
   );
