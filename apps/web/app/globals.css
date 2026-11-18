@@ -52,6 +52,25 @@ html {
   75% { opacity: 1; }
 }
 
+/* ---- window-box flowers ---- */
+.flower-sway {
+  animation: flower-sway 6s ease-in-out infinite;
+}
+@keyframes flower-sway {
+  50% {
+    transform: rotate(4deg);
+  }
+}
+/* a push that lands while you watch: the flower springs up out of the box */
+.bloom-in {
+  animation: bloom-in 1.1s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+}
+@keyframes bloom-in {
+  from {
+    transform: scale(0);
+  }
+}
+
 /* locked window: the shutters rattle but won't open */
 .window-rattle {
   animation: rattle 0.4s ease-in-out;
@@ -63,6 +82,8 @@ html {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .flower-sway,
+  .bloom-in,
   .window-rattle,
   .sky-twinkle,
   .sky-drift,
