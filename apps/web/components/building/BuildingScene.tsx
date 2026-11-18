@@ -211,16 +211,16 @@ export function BuildingScene({ initialDoors, todayDoor, sleeps, dateLabels, sky
         animate={{ opacity: (zoomed || (cameraOn && floor === 0)) && floor != null ? 0.12 : 1, y: 0 }}
         transition={{ ...springs.gentle, delay: 0.2 }}
       >
-        <h1 className="font-serif text-4xl leading-none italic sm:text-6xl">
-          birthday <span className="text-2xl sm:text-4xl">♡</span>
+        <p className="font-sans text-[10px] font-medium tracking-[0.28em] uppercase opacity-75 sm:text-[11px]">Advent calendar · 2026</p>
+        <h1 className="mt-1.5 font-serif text-4xl leading-none italic sm:text-6xl">
+          birthday <span className="text-2xl not-italic sm:text-4xl">♡</span>
         </h1>
-        <p className="mt-1 font-display text-sm tracking-[0.25em] sm:text-lg">ADVENT CALENDAR</p>
-        <p className="mt-2 font-hand text-lg leading-tight sm:text-xl">
-          {finale ? "11 / 11 · happy birthday, Jae" : `11 windows to Nov 28 · ${sleeps} ${sleeps === 1 ? "sleep" : "sleeps"}`}
+        <p className="mt-3 font-sans text-[13px] leading-snug sm:text-sm">
+          {finale ? "11 of 11 · happy birthday, Jae" : `11 windows to Nov 28 · ${sleeps} ${sleeps === 1 ? "sleep" : "sleeps"} to go`}
         </p>
-        <p className="mt-0.5 font-hand text-base opacity-80">
+        <p className="mt-0.5 font-sans text-xs capitalize opacity-70">
           Bangalore · {sky.phase}
-          {sky.tempC != null && ` · ${sky.tempC}°`}
+          {sky.tempC != null && ` · ${sky.tempC}°C`}
           {sky.raining && " · raining"}
         </p>
       </motion.header>
@@ -305,12 +305,12 @@ export function BuildingScene({ initialDoors, todayDoor, sleeps, dateLabels, sky
       <AnimatePresence>
         {built && (
           <motion.p
-            className={`pointer-events-none absolute right-8 bottom-6 z-30 hidden max-w-48 text-right font-hand text-lg leading-tight md:block ${onSky}`}
+            className={`pointer-events-none absolute right-8 bottom-6 z-30 hidden max-w-56 text-right font-sans text-xs tracking-wide md:block ${onSky}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: [0, 0.85, 0.85, 0] }}
             transition={{ duration: 7, times: [0, 0.1, 0.8, 1] }}
           >
-            hover a window to peek · click to step inside
+            Hover a window to peek · click to step inside
           </motion.p>
         )}
       </AnimatePresence>

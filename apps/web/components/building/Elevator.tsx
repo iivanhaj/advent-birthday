@@ -14,7 +14,7 @@ const ANGLE = [60, 20, -20, -60]; // roof, 2, 1, ground
  */
 export function Elevator({ floor, onFloor }: { floor: number | null; onFloor: (f: number | null) => void }) {
   return (
-    <nav aria-label="Floors" className="kraft fixed top-1/2 right-2 z-40 flex -translate-y-1/2 flex-col items-center gap-1.5 rounded-2xl px-1.5 py-2 shadow-[0_8px_24px_-10px_rgba(74,52,36,0.7)]">
+    <nav aria-label="Floors" className="fixed top-1/2 right-2 z-40 flex -translate-y-1/2 flex-col items-center gap-1.5 rounded-full border border-line/25 bg-paper px-1.5 py-2.5 text-line shadow-[0_12px_32px_-12px_rgba(78,30,40,0.35)]">
       <svg viewBox="0 0 40 24" className="w-9" aria-hidden>
         <path d="M4 22 A16 16 0 0 1 36 22" fill="none" stroke="currentColor" strokeWidth="1.4" />
         {ANGLE.map((a) => {
@@ -40,7 +40,7 @@ export function Elevator({ floor, onFloor }: { floor: number | null; onFloor: (f
           onClick={() => onFloor(i)}
           aria-current={floor === i ? "true" : undefined}
           aria-label={`Go to floor ${f.label}`}
-          className="flex size-8 items-center justify-center rounded-full border border-kraft-ink/60 font-serif text-sm italic"
+          className="flex size-8 items-center justify-center rounded-full border border-line/40 font-sans text-xs font-medium"
           style={{ background: floor === i ? "var(--color-glow)" : "transparent" }}
           whileTap={{ scale: 0.88 }}
           transition={springs.squish}
@@ -48,7 +48,7 @@ export function Elevator({ floor, onFloor }: { floor: number | null; onFloor: (f
           {f.label}
         </motion.button>
       ))}
-      <button type="button" onClick={() => onFloor(null)} aria-label="See the whole building" className="mt-0.5 font-hand text-sm leading-none">
+      <button type="button" onClick={() => onFloor(null)} aria-label="See the whole building" className="mt-0.5 font-sans text-[10px] font-medium tracking-[0.12em] uppercase opacity-75">
         all
       </button>
     </nav>

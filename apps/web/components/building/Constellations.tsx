@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { springs } from "@birthday-garden/garden-ui";
 import { VIEW_H, VIEW_W } from "@/lib/building";
 import { anchors, constellation, starPath } from "@/lib/constellations";
 import { commitTitle, pushesByDoor, type PushRow } from "@/lib/pushes";
@@ -92,8 +91,8 @@ export function Constellations({ pushes, fresh, isPhone, phase, todayDoor, built
                 </g>
               );
             })}
-            <text x={c.label.x} y={c.label.y} textAnchor="middle" className="font-hand" fontSize={isPhone ? 15 : 17} fill={ink} fillOpacity={0.75}>
-              {c.door === 0 ? "door 0 · the foundation" : `door ${c.door}${c.door === todayDoor ? " · today" : ""}`}
+            <text x={c.label.x} y={c.label.y} textAnchor="middle" className="font-sans uppercase" fontSize={isPhone ? 9 : 10} letterSpacing={1.6} fontWeight={500} fill={ink} fillOpacity={0.6}>
+              {c.door === 0 ? "No. 0 · foundation" : `No. ${c.door}${c.door === todayDoor ? " · today" : ""}`}
             </text>
           </g>
         ))}
@@ -110,17 +109,17 @@ export function Constellations({ pushes, fresh, isPhone, phase, todayDoor, built
       <AnimatePresence>
         {hover && (
           <motion.div
-            className="kraft pointer-events-none absolute z-40 w-max max-w-56 px-3.5 py-2 shadow-[0_10px_22px_-10px_rgba(74,52,36,0.65)]"
+            className="pointer-events-none absolute z-40 w-max max-w-60 rounded-md border border-line/25 bg-paper px-3.5 py-2.5 text-line shadow-[0_12px_32px_-12px_rgba(78,30,40,0.35)]"
             style={{ left: `${(hover.x / VIEW_W) * 100}%`, top: `${(hover.y / VIEW_H) * 100}%`, x: hover.x < 0 ? "0%" : "-50%", y: "calc(-100% - 14px)" }}
-            initial={{ opacity: 0, rotate: -4 }}
-            animate={{ opacity: 1, rotate: -1.5, transition: springs.bouncy }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.18 } }}
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
           >
-            <p className="font-hand text-lg leading-none">
-              {hover.door === 0 ? "door 0" : `door ${hover.door}`} · {hover.push.repo ?? "push"}
+            <p className="font-sans text-[10px] font-medium tracking-[0.16em] uppercase opacity-70">
+              No. {hover.door} · {hover.push.repo ?? "push"}
             </p>
-            <p className="mt-1 font-serif text-base leading-tight italic">{commitTitle(hover.push)}</p>
-            {hover.push.sha && <p className="mt-1 font-mono text-xs opacity-70">{hover.push.sha.slice(0, 7)}</p>}
+            <p className="mt-1 font-serif text-[15px] leading-snug">{commitTitle(hover.push)}</p>
+            {hover.push.sha && <p className="mt-1 font-mono text-[11px] opacity-60">{hover.push.sha.slice(0, 7)}</p>}
           </motion.div>
         )}
       </AnimatePresence>

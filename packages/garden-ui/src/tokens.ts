@@ -28,7 +28,6 @@ export const colourways = {
 /** CSS variables the app's next/font loaders write to. */
 export const fontVariables = {
   serif: "--font-playfair",
-  display: "--font-righteous",
+  sans: "--font-inter",
   hand: "--font-caveat",
-  body: "--font-nunito",
 } as const;

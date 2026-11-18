@@ -55,14 +55,15 @@ export function Facade({ fast, night }: { fast: boolean; night: boolean }) {
         x="358"
         y="694"
         textAnchor="middle"
-        className="font-hand"
-        fontSize="15"
+        className="font-serif italic"
+        fontSize="11"
+        letterSpacing="0.5"
         fill="var(--color-line)"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: total + 0.2 }}
       >
-        est. nov 28
+        Est. 28 Nov
       </motion.text>
     </svg>
   );

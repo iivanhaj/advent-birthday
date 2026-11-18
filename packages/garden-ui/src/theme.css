@@ -15,9 +15,9 @@
 /* `inline` because these point at variables set by next/font at runtime. */
 @theme inline {
   --font-serif: var(--font-playfair), Georgia, serif;
-  --font-display: var(--font-righteous), ui-rounded, system-ui, sans-serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-hand: var(--font-caveat), "Segoe Print", cursive;
-  --font-body: var(--font-nunito), ui-rounded, system-ui, sans-serif;
+  --font-body: var(--font-inter), system-ui, sans-serif;
 }
 
 /* Subtle paper grain (SVG noise, no image file). */
