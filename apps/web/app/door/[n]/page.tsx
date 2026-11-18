@@ -6,7 +6,7 @@ import { getCalendarDoors, getPushes } from "@/lib/calendar-data";
 import { DOOR_META } from "@/lib/doors";
 import { DOOR_COUNT, dateLabel, doorDate, doorForDate, istDate, isDoorReachable } from "@/lib/unlock";
 import { DoorPlaceholder, SealedDoor } from "./placeholders";
-import { StarMap } from "./StarMap";
+import { Greenhouse } from "./Greenhouse";
 
 /** Each door's "what I learned" card (written after shipping). */
 const LEARNED: Record<number, string[]> = {
@@ -49,13 +49,12 @@ export default async function DoorPage({ params, searchParams }: Params) {
   const preview = (await searchParams).preview;
   const learned = LEARNED[n] ?? ["(fill me in after shipping)"];
 
-  // Door 1: the star map of every push.
+  // Door 1: the greenhouse (a stem inside and a star outside for every push).
   if (n === 1) {
     const pushes = await getPushes(preview);
-    const dateLabels = Object.fromEntries(Array.from({ length: DOOR_COUNT }, (_, i) => [i + 1, dateLabel(doorDate(i + 1))]));
     return (
       <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
-        <StarMap initialPushes={pushes} todayDoor={doorForDate(istDate())} dateLabels={dateLabels} />
+        <Greenhouse initialPushes={pushes} todayDoor={doorForDate(istDate())} />
       </DoorFrame>
     );
   }
