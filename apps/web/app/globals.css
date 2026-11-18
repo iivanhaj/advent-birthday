@@ -71,6 +71,41 @@ html {
   }
 }
 
+/* ---- constellations ---- */
+.star-twinkle {
+  animation: star-twinkle 4.5s ease-in-out infinite;
+}
+@keyframes star-twinkle {
+  50% {
+    opacity: 0.55;
+  }
+}
+/* a new star flares in, then the line from the previous star draws itself */
+.star-in {
+  animation: star-in 1.4s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+}
+@keyframes star-in {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  45% {
+    transform: scale(2.2);
+    opacity: 1;
+  }
+}
+.star-line-in {
+  animation: star-line-in 1.2s ease-out both;
+}
+@keyframes star-line-in {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 /* locked window: the shutters rattle but won't open */
 .window-rattle {
   animation: rattle 0.4s ease-in-out;
@@ -84,6 +119,9 @@ html {
 @media (prefers-reduced-motion: reduce) {
   .flower-sway,
   .bloom-in,
+  .star-twinkle,
+  .star-in,
+  .star-line-in,
   .window-rattle,
   .sky-twinkle,
   .sky-drift,
