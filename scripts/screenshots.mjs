@@ -123,6 +123,8 @@ async function hoverWindow(n) {
     `(() => { const b = document.querySelector('button[aria-label^="Window ${n},"]'); if (!b) return null; const r = b.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })()`,
   );
   if (r) await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: r.x, y: r.y });
+  // Focus shows the same card, and is reliable where a synthetic hover may not be.
+  await evaluate(`document.querySelector('button[aria-label^="Window ${n},"]')?.focus({ focusVisible: false })`);
   await sleep(1200);
 }
 
