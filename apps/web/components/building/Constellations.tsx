@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { VIEW_H, VIEW_W } from "@/lib/building";
 import { anchors, constellation, starPath } from "@/lib/constellations";
 import { commitTitle, pushesByDoor, type PushRow } from "@/lib/pushes";
@@ -106,23 +105,18 @@ export function Constellations({ pushes, fresh, isPhone, phase, todayDoor, built
       </svg>
 
       {/* commit card for the hovered star, positioned in building units (%) so it sticks to the star */}
-      <AnimatePresence>
-        {hover && (
-          <motion.div
-            className="pointer-events-none absolute z-40 w-max max-w-60 rounded-md border border-line/25 bg-paper px-3.5 py-2.5 text-line shadow-[0_12px_32px_-12px_rgba(78,30,40,0.35)]"
-            style={{ left: `${(hover.x / VIEW_W) * 100}%`, top: `${(hover.y / VIEW_H) * 100}%`, x: hover.x < 0 ? "0%" : "-50%", y: "calc(-100% - 14px)" }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1, transition: { duration: 0.18 } }}
-            exit={{ opacity: 0, transition: { duration: 0.12 } }}
+      {hover && (
+          <div
+            className="card-in pointer-events-none absolute z-40 w-max max-w-60 rounded-md border border-line/25 bg-paper px-3.5 py-2.5 text-line shadow-[0_12px_32px_-12px_rgba(78,30,40,0.35)]"
+            style={{ left: `${(hover.x / VIEW_W) * 100}%`, top: `${(hover.y / VIEW_H) * 100}%`, translate: `${hover.x < 0 ? "0%" : "-50%"} calc(-100% - 14px)` }}
           >
             <p className="font-sans text-[10px] font-medium tracking-[0.16em] uppercase opacity-70">
               No. {hover.door} · {hover.push.repo ?? "push"}
             </p>
             <p className="mt-1 font-serif text-[15px] leading-snug">{commitTitle(hover.push)}</p>
             {hover.push.sha && <p className="mt-1 font-mono text-[11px] opacity-60">{hover.push.sha.slice(0, 7)}</p>}
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
     </>
   );
 }

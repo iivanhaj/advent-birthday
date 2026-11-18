@@ -272,7 +272,7 @@ export function BuildingScene({ initialDoors, todayDoor, sleeps, dateLabels, sky
           {/* and a flower in that day's window box (in front of the windows) */}
           {intro && <WindowBoxes pushes={pushes} fresh={fresh} built={built} />}
 
-          <AnimatePresence>{peek && <PeekCard key={peek.win.n} peek={peek} />}</AnimatePresence>
+          {peek && <PeekCard key={peek.win.n} peek={peek} />}
 
           {intro && finale && built && <Fireworks color={night ? "#FBE3B0" : "var(--color-line)"} />}
 
@@ -285,7 +285,7 @@ export function BuildingScene({ initialDoors, todayDoor, sleeps, dateLabels, sky
       </div>
 
       {/* controls */}
-      <div className={`absolute bottom-4 left-4 z-40 flex gap-2 ${onSky}`}>
+      <div className={`absolute bottom-4 left-4 z-40 flex items-center rounded-full border border-current/25 p-0.5 ${onSky}`}>
         <ControlButton label={zoomed ? "Zoom out" : "Zoom in (bigger windows and text)"} pressed={zoomed} onClick={toggleZoom}>
           <circle cx="10.5" cy="10.5" r="6.5" />
           <path d="M15.5 15.5 L21 21 M7.5 10.5 H13.5" />
@@ -368,14 +368,11 @@ function PeekCard({ peek }: { peek: Peek }) {
     above ? "bottom-[calc(100%+10px)]" : "top-[calc(100%+20px)]",
     align === "left" ? "left-0" : align === "right" ? "right-0" : "left-1/2",
   ].join(" ");
-  const x = align === "center" ? "-50%" : "0%";
   return (
     <div className="pointer-events-none absolute z-40" style={pctBox(win.x, win.y, win.w, win.h)}>
-      <motion.div
-        className={`absolute w-max max-w-64 rounded-md border border-line/25 bg-paper px-3.5 py-2.5 text-line shadow-[0_12px_32px_-12px_rgba(78,30,40,0.35)] ${pos}`}
-        initial={{ opacity: 0, y: above ? 4 : -4, x }}
-        animate={{ opacity: 1, y: 0, x, transition: { duration: 0.18, ease: "easeOut" } }}
-        exit={{ opacity: 0, x, transition: { duration: 0.12 } }}
+      <div
+        className={`card-in absolute w-max max-w-64 rounded-md border border-line/25 bg-paper px-3.5 py-2.5 text-line shadow-[0_12px_32px_-12px_rgba(78,30,40,0.35)] ${pos} ${align === "center" ? "-translate-x-1/2" : ""}`}
+        style={{ "--card-dy": above ? "4px" : "-4px" } as React.CSSProperties}
       >
         <p className="font-sans text-[10px] font-medium tracking-[0.16em] uppercase opacity-70">
           No. {String(win.n).padStart(2, "0")} · {dateLabel}
@@ -384,28 +381,25 @@ function PeekCard({ peek }: { peek: Peek }) {
         {!locked && (
           <p className="mt-1.5 font-sans text-xs font-medium opacity-80">{open ? "Step inside →" : "Tap to open the shutters"}</p>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 }
 
 function ControlButton({ label, pressed, onClick, children }: { label: string; pressed: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <motion.button
+    <button
       type="button"
       aria-label={label}
       aria-pressed={pressed}
       title={label}
       onClick={onClick}
-      className="flex size-10 items-center justify-center rounded-full border border-current/50 backdrop-blur-sm"
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.9 }}
-      transition={springs.squish}
+      className={`flex size-9 items-center justify-center rounded-full transition-colors outline-none hover:bg-current/10 focus-visible:ring-2 focus-visible:ring-current/50 ${pressed ? "bg-current/15" : ""}`}
     >
-      <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         {children}
       </svg>
-    </motion.button>
+    </button>
   );
 }
 

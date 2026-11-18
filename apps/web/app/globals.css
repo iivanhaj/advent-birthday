@@ -199,7 +199,20 @@ html {
   70% { transform: translateX(-2px); }
 }
 
+/* Label cards: a short fade + 4px rise. Plain CSS because Framer's animate
+   stalls under the camera's animated parent. --card-dy sets the direction. */
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--card-dy, 4px));
+  }
+}
+.card-in {
+  animation: card-in 0.18s ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .card-in,
   .flower-sway,
   .bloom-in,
   .star-twinkle,
