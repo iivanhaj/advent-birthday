@@ -67,7 +67,11 @@ export function constellation(door: number, pushes: PushRow[], anchor: [number, 
     stars.push({ x: r1(x), y: r1(y), size, push: p });
   });
 
-  return { door, stars, label: { x: anchor[0], y: r1(anchor[1] + ry + 28) } };
+  // label just under the constellation's lowest star (not under the whole ellipse)
+  const lowest = stars.reduce((m, s) => Math.max(m, s.y), anchor[1]);
+  const xs = stars.map((s) => s.x);
+  const mid = xs.length ? (Math.min(...xs) + Math.max(...xs)) / 2 : anchor[0];
+  return { door, stars, label: { x: r1(mid), y: r1(lowest + radius * 0.42 + 8) } };
 }
 
 /** A 4-point sparkle star centred on (0,0). */
