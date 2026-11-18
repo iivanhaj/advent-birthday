@@ -25,7 +25,7 @@ const ist = (local: string) => new Date(`${local}:00+05:30`);
  *
  * `next: { revalidate: 600 }` tells Next's fetch cache to reuse the response
  * for 10 minutes: every visitor in that window shares one upstream request
- * (that's the TTL cache from the Door 6 interview notes, for free).
+ * (a time-to-live cache, for free).
  * If the API is down we fall back to typical sunrise/sunset times, so the page
  * never breaks because of the weather.
  */

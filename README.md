@@ -112,9 +112,9 @@ flowchart LR
 4. **Supabase Realtime** streams the new rows over a websocket, and every open
    page grows the flower and star in about a second.
 
-## Engineering notes
+## Under the hood
 
-Things I'd talk about in an interview:
+A few things that were fun to figure out:
 
 - **Idempotent, atomic webhook.** GitHub retries deliveries, so the delivery ID
   is a unique key (a retry is a no-op), and everything happens in one
