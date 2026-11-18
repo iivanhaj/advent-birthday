@@ -38,16 +38,16 @@ export async function getPushes(preview?: string): Promise<PushRow[]> {
   if (devUnlockAll() && preview) return samplePushes(preview === "finale" ? DOOR_COUNT : 7);
   const supabase = publicClient();
   if (!supabase) return [];
-  const { data, error } = await supabase
-    .from("pushes")
-    .select("delivery_id, sha, message, repo, pushed_at, ist_date")
-    .order("pushed_at")
-    .limit(1000);
+  const query = (cols: string) => supabase.from("pushes").select(cols).order("pushed_at").limit(1000);
+  let { data, error } = await query("delivery_id, sha, message, repo, pushed_at, ist_date, files");
+  // 42703 = column doesn't exist: the file-kinds migration hasn't run yet. Load without it.
+  if (error?.code === "42703") ({ data, error } = await query("delivery_id, sha, message, repo, pushed_at, ist_date"));
   if (error) {
     console.error("Couldn't load pushes:", error.message);
     return [];
   }
-  return (data ?? []) as PushRow[];
+  // The column list is chosen at runtime, so supabase-js can't infer the row type.
+  return (data ?? []) as unknown as PushRow[];
 }
 
 export async function getCalendarDoors(preview?: string): Promise<CalendarDoor[]> {

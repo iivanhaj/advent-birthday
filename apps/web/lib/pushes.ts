@@ -1,4 +1,5 @@
 import { DOOR_COUNT, START_DATE, doorDate } from "./unlock";
+import type { FileCounts } from "./file-kinds";
 
 /** A row from the `pushes` table (the columns the site shows). */
 export type PushRow = {
@@ -8,6 +9,7 @@ export type PushRow = {
   repo: string | null;
   pushed_at: string;
   ist_date: string; // YYYY-MM-DD, decided by the server when the push landed
+  files?: FileCounts | null; // kinds of files touched, e.g. { ts: 3, css: 1 } (null on older pushes)
 };
 
 /**
@@ -80,6 +82,7 @@ export function samplePushes(upToDoor: number): PushRow[] {
         repo: i === count - 1 && n > 0 ? "blind-75" : "advent-birthday",
         pushed_at: `${date}T${String(9 + i * 2).padStart(2, "0")}:15:00+05:30`,
         ist_date: date,
+        files: [{ ts: 3 }, { ts: 2, css: 1 }, { sql: 1 }, { md: 2 }, { config: 3, ts: 1 }, { java: 1 }][(n + i) % 6],
       });
     }
   }
