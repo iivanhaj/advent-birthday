@@ -10,10 +10,20 @@ import { pushesByDoor, seeded, type PushRow } from "@/lib/pushes";
  * pavement, one either side.
  */
 type Bed = { x0: number; x1: number; y: number }[];
+const BOX_H = 8; // planter height in building units (the sill is 14)
+
+/** A planter box standing on each window's sill, in front of the bottom of the glass. */
+const PLANTERS = WINDOWS.filter((w) => w.n !== FRONT_DOOR).map((w) => {
+  const x0 = w.x + 2;
+  const x1 = w.x + w.w - 2;
+  const bottom = w.y + w.h;
+  return { n: w.n, x0, x1, top: bottom - BOX_H, bottom };
+});
+
 const BEDS: Record<number, Bed> = Object.fromEntries([
-  ...WINDOWS.filter((w) => w.n !== FRONT_DOOR).map((w) => [w.n, [{ x0: w.x - w.w * 0.06 + 5, x1: w.x + w.w * 1.06 - 5, y: w.y + w.h }]]),
+  ...PLANTERS.map((p) => [p.n, [{ x0: p.x0 + 5, x1: p.x1 - 5, y: p.top + 1.5 }]]),
   [FRONT_DOOR, [{ x0: 197, x1: 207, y: 690 }, { x0: 281, x1: 291, y: 690 }]],
-  [0, [{ x0: 300, x1: 416, y: 670 }]],
+  [0, [{ x0: 303, x1: 413, y: 671.5 }]],
 ]);
 /** The extra shapes some beds need (a box for door 0, pots for the front door). */
 const BED_SHAPES = [
@@ -35,9 +45,28 @@ export function WindowBoxes({ pushes, fresh, built }: { pushes: PushRow[]; fresh
   return (
     <svg viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} className="pointer-events-none absolute inset-0 z-[8] h-full w-full overflow-visible" aria-hidden>
       <g style={{ opacity: built ? 1 : 0, transition: "opacity 0.8s" }}>
+        {PLANTERS.map((p) => {
+          const count = byDoor.get(p.n)?.length ?? 0;
+          return (
+            <g key={p.n}>
+              <path
+                d={`M${p.x0 - 1} ${p.top} H${p.x1 + 1} L${p.x1 - 1} ${p.bottom} H${p.x0 + 1} Z`}
+                fill="var(--color-paper)"
+                stroke="var(--color-line)"
+                strokeWidth={1.5}
+                strokeLinejoin="round"
+                vectorEffect="non-scaling-stroke"
+              />
+              <path d={`M${p.x0} ${p.top + 2.5} H${p.x1}`} stroke="var(--color-line)" strokeOpacity={0.45} strokeWidth={1} vectorEffect="non-scaling-stroke" />
+              {count > 0 && <Foliage x0={p.x0} x1={p.x1} y={p.top} />}
+              {count > 1 && <Ivy x={p.x1 - 3} y={p.top + 1} length={Math.min(24, 8 + count * 2.5)} seed={p.n} />}
+            </g>
+          );
+        })}
         {BED_SHAPES.map((d) => (
           <path key={d} d={d} fill="var(--color-paper)" stroke="var(--color-line)" strokeWidth={1.5} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
         ))}
+        {byDoor.has(0) && <Foliage x0={298} x1={418} y={670} />}
         {[...byDoor.entries()].map(([door, list]) => {
           const beds = BEDS[door];
           if (!beds) return null;
@@ -71,5 +100,37 @@ export function WindowBoxes({ pushes, fresh, built }: { pushes: PushRow[]; fresh
         })}
       </g>
     </svg>
+  );
+}
+
+const LEAF = "#7FA77B";
+/** A gentle side-to-side wave for the ivy (a table, not Math.sin: server and browser must agree exactly). */
+const WAVE = [0, 1.2, 2, 1.6, 0.4, -0.8, -1.6, -1.2];
+const LEAF_FILL = "#D6E6CF";
+
+/** A low band of leaves along the top of a planter: overlapping half-rounds. */
+function Foliage({ x0, x1, y }: { x0: number; x1: number; y: number }) {
+  const step = 5;
+  const n = Math.max(2, Math.floor((x1 - x0 - 2) / step));
+  const w = (x1 - x0 - 2) / n;
+  let d = `M${r1(x0 + 1)} ${y}`;
+  for (let i = 0; i < n; i++) d += ` a${r1(w / 2)} ${i % 2 ? 2.6 : 3.4} 0 0 1 ${r1(w)} 0`;
+  return <path d={d + " Z"} fill={LEAF_FILL} stroke={LEAF} strokeWidth={1} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />;
+}
+
+/** Ivy trailing over the front of the box and down past the sill. */
+function Ivy({ x, y, length, seed }: { x: number; y: number; length: number; seed: number }) {
+  const sway = seed % 2 ? 1 : -1;
+  const leaves = [];
+  for (let i = 1, t = 5; t < length; i++, t += 4.5) {
+    const side = i % 2 ? 1 : -1;
+    const lx = r1(x + sway * WAVE[i % WAVE.length] + side * 1.8);
+    leaves.push(<ellipse key={t} cx={lx} cy={r1(y + t)} rx={1.7} ry={1.15} transform={`rotate(${side * 35} ${lx} ${r1(y + t)})`} fill={LEAF_FILL} stroke={LEAF} strokeWidth={0.9} vectorEffect="non-scaling-stroke" />);
+  }
+  return (
+    <g className="flower-sway" style={{ transformBox: "fill-box", transformOrigin: "50% 0%" }}>
+      <path d={`M${x} ${y} q${sway * 3} ${r1(length / 3)} 0 ${r1(length * 0.6)} t0 ${r1(length * 0.4)}`} fill="none" stroke={LEAF} strokeWidth={1} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+      {leaves}
+    </g>
   );
 }
