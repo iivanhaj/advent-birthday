@@ -5,10 +5,11 @@
 alter table public.pushes add column if not exists files jsonb not null default '{}'::jsonb;
 
 -- record_push gains one argument (p_files). Postgres identifies a function by
--- its argument list, so the old version is dropped and recreated.
+-- its argument list, so the old version is dropped and the new one created
+-- (with "or replace", so running this file twice is harmless).
 drop function if exists public.record_push(text, text, text, text, timestamptz, date, smallint[]);
 
-create function public.record_push(
+create or replace function public.record_push(
   p_delivery_id text,
   p_repo        text,
   p_sha         text,
