@@ -15,6 +15,10 @@ import { Room } from "./Room";
 import { Sky } from "./Sky";
 import { useParallax } from "./useParallax";
 import { Window } from "./Window";
+import { Constellations } from "./Constellations";
+import { WindowBoxes } from "./WindowBoxes";
+import { useLivePushes } from "./useLivePushes";
+import type { PushRow } from "@/lib/pushes";
 
 type Props = {
   initialDoors: CalendarDoor[];
@@ -22,13 +26,15 @@ type Props = {
   sleeps: number;
   dateLabels: Record<number, string>;
   sky: SkyData;
+  initialPushes: PushRow[];
 };
 
 const FLOOR_ORDER = { ground: 0, first: 1, second: 2, roof: 3 } as const;
 
-export function BuildingScene({ initialDoors, todayDoor, sleeps, dateLabels, sky }: Props) {
+export function BuildingScene({ initialDoors, todayDoor, sleeps, dateLabels, sky, initialPushes }: Props) {
   const router = useRouter();
   const doors = useLiveDoors(initialDoors);
+  const { pushes, fresh } = useLivePushes(initialPushes);
   const byN = useMemo(() => new Map(doors.map((d) => [d.n, d])), [doors]);
   const finale = Boolean(byN.get(11)?.shipped_at);
   const night = sky.phase === "night" || sky.phase === "dusk";
@@ -217,6 +223,8 @@ export function BuildingScene({ initialDoors, todayDoor, sleeps, dateLabels, sky
           transition={{ type: "spring", stiffness: 70, damping: 16, mass: 1.1 }}
           style={{ x: bX }}
         >
+          {/* every push is a star; each day's pushes form that door's constellation (behind the building) */}
+          {intro && <Constellations pushes={pushes} fresh={fresh} isPhone={isPhone} phase={sky.phase} todayDoor={todayDoor} built={built} />}
           {intro && <Facade fast={fast} night={sky.phase === "night"} />}
 
           {intro &&
@@ -246,6 +254,9 @@ export function BuildingScene({ initialDoors, todayDoor, sleeps, dateLabels, sky
                   />
               );
             })}
+
+          {/* and a flower in that day's window box (in front of the windows) */}
+          {intro && <WindowBoxes pushes={pushes} fresh={fresh} built={built} />}
 
           {intro && finale && built && <Fireworks color={night ? "#FBE3B0" : "var(--color-line)"} />}
 

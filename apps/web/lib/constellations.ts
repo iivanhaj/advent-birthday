@@ -47,7 +47,8 @@ export function starPath(s: number): string {
 export function anchors(isPhone: boolean, side: number): [number, number][] {
   if (isPhone) {
     const xs = [55, 175, 305, 425];
-    const ys = [-150, -96, -42];
+    // three rows spread across the sky between the title and the roof
+    const ys = [-178, -108, -38];
     return Array.from({ length: 12 }, (_, i) => [xs[i % 4], ys[Math.floor(i / 4)]] as [number, number]);
   }
   const L = (f: number) => r1(-side * f);

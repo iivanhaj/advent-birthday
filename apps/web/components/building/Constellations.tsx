@@ -34,7 +34,7 @@ export function Constellations({ pushes, fresh, isPhone, phase, todayDoor, built
   const night = phase === "night" || phase === "dusk";
   const ink = night ? "#FBF1EE" : "var(--color-line)";
   const spots = anchors(isPhone, side);
-  const radius = isPhone ? 24 : 36;
+  const radius = isPhone ? 22 : 36;
   const groups = [...pushesByDoor(pushes).entries()].map(([door, list]) => constellation(door, list, spots[door], radius));
 
   return (
