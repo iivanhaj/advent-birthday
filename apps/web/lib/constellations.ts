@@ -67,7 +67,7 @@ export function constellation(door: number, pushes: PushRow[], anchor: [number, 
     stars.push({ x: r1(x), y: r1(y), size, push: p });
   });
 
-  return { door, stars, label: { x: anchor[0], y: r1(anchor[1] + ry + 18) } };
+  return { door, stars, label: { x: anchor[0], y: r1(anchor[1] + ry + 28) } };
 }
 
 /** A 4-point sparkle star centred on (0,0). */

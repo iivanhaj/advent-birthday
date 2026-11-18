@@ -147,6 +147,38 @@ html {
   }
 }
 
+/* ---- greenhouse: plants sway from the base of their stems; fireflies wander ---- */
+.plant-sway {
+  animation: plant-sway 6s ease-in-out infinite alternate;
+}
+@keyframes plant-sway {
+  from {
+    transform: rotate(-1.4deg);
+  }
+  to {
+    transform: rotate(1.4deg);
+  }
+}
+.firefly {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: firefly 9s ease-in-out infinite;
+}
+@keyframes firefly {
+  0%, 100% {
+    transform: translate(0, 0);
+    opacity: 0.25;
+  }
+  30% {
+    transform: translate(14px, -10px);
+    opacity: 1;
+  }
+  60% {
+    transform: translate(-8px, -18px);
+    opacity: 0.55;
+  }
+}
+
 /* ---- greenhouse: a new stem draws up out of its pot, then its leaf and flower open ---- */
 .stem-in {
   animation: star-line-in 1.1s ease-out both;
@@ -177,6 +209,8 @@ html {
   .star-line-in,
   .stem-in,
   .head-in,
+  .plant-sway,
+  .firefly,
   .window-rattle,
   .sky-twinkle,
   .sky-drift,
