@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isCountablePush, taggedDoors, verifySignature, type PushPayload } from "@/lib/github-webhook";
+import { isCountablePush, pushFileKinds, taggedDoors, verifySignature, type PushPayload } from "@/lib/github-webhook";
 import { adminClient } from "@/lib/supabase/server";
 import { istDate } from "@/lib/unlock";
 
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
   } catch {
     return json({ error: "database not configured" }, 500);
   }
-  const { data, error } = await supabase.rpc("record_push", {
+  const args = {
     p_delivery_id: deliveryId,
     p_repo: payload.repository?.full_name ?? null,
     p_sha: head?.id ?? payload.after ?? null,
@@ -59,7 +59,11 @@ export async function POST(req: Request) {
     p_pushed_at: now.toISOString(),
     p_ist_date: istDate(now),
     p_ship_doors: taggedDoors(payload),
-  });
+  };
+  let { data, error } = await supabase.rpc("record_push", { ...args, p_files: pushFileKinds(payload) });
+  // PGRST202 = "no function with these arguments": the database hasn't had the
+  // file-kinds migration yet. Record the push the old way rather than lose it.
+  if (error?.code === "PGRST202") ({ data, error } = await supabase.rpc("record_push", args));
 
   if (error) {
     // 500 makes GitHub show the delivery as failed so you can hit "Redeliver";

@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { DOOR_COUNT } from "./unlock";
+import { countKinds, type FileCounts } from "./file-kinds";
 
 /**
  * Is this request really from GitHub?
@@ -31,8 +32,8 @@ export type PushPayload = {
   deleted?: boolean;
   after?: string;
   repository?: { full_name?: string };
-  head_commit?: { id?: string; message?: string } | null;
-  commits?: { id?: string; message?: string }[];
+  head_commit?: { id?: string; message?: string; added?: string[]; modified?: string[] } | null;
+  commits?: { id?: string; message?: string; added?: string[]; modified?: string[] }[];
 };
 
 const DOOR_TAG = /\bdoor:(\d{1,2})\b/gi;
@@ -53,4 +54,14 @@ export function taggedDoors(payload: PushPayload): number[] {
 /** Branch pushes count; tag pushes and branch deletions don't. */
 export function isCountablePush(payload: PushPayload): boolean {
   return !payload.deleted && Boolean(payload.ref?.startsWith("refs/heads/"));
+}
+
+/**
+ * Which kinds of files the push touched (added or modified, across all its
+ * commits), e.g. { ts: 3, css: 1 }. GitHub lists the paths per commit in the
+ * push payload, so no extra API call is needed. Deleted files don't count.
+ */
+export function pushFileKinds(payload: PushPayload): FileCounts {
+  const commits = payload.commits?.length ? payload.commits : payload.head_commit ? [payload.head_commit] : [];
+  return countKinds(commits.flatMap((c) => [...(c.added ?? []), ...(c.modified ?? [])]));
 }
