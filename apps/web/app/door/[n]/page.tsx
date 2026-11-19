@@ -7,6 +7,7 @@ import { DOOR_META } from "@/lib/doors";
 import { DOOR_COUNT, dateLabel, doorDate, doorForDate, istDate, isDoorReachable } from "@/lib/unlock";
 import { DoorPlaceholder, SealedDoor } from "./placeholders";
 import { Greenhouse } from "./Greenhouse";
+import { MochiHome } from "./MochiHome";
 
 /** Each door's "what I learned" card (written after shipping). */
 const LEARNED: Record<number, string[]> = {
@@ -14,6 +15,11 @@ const LEARNED: Record<number, string[]> = {
     "Supabase Realtime turns a Postgres INSERT into a websocket event, so a push lights a star in about a second",
     "seed a PRNG with the commit SHA and the same push draws the same star on every screen",
     "Math.cos can differ in the last digit between Node and browsers, enough to break hydration",
+  ],
+  2: [
+    "a statechart keeps behaviour honest: every state and transition is explicit, and testable without a browser",
+    "A* over (ledge, x) states turns 'get to the kibble' into a route of walks and jumps",
+    "a jump is three facts (start, end, apex height); the projectile equations do the rest",
   ],
 };
 
@@ -58,6 +64,16 @@ export default async function DoorPage({ params, searchParams }: Params) {
     return (
       <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
         <Greenhouse initialPushes={pushes} todayDoor={doorForDate(istDate())} />
+      </DoorFrame>
+    );
+  }
+
+  // Door 2: Mochi's home (Mochi herself roams every page).
+  if (n === 2) {
+    const pushes = await getPushes(preview);
+    return (
+      <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
+        <MochiHome initialPushes={pushes} today={istDate()} />
       </DoorFrame>
     );
   }

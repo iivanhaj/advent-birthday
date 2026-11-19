@@ -32,7 +32,7 @@ export function doorState(door: CalendarDoor, finaleShipped: boolean): DoorState
 /** Per-door content that isn't in the DB. (Where each window sits lives in lib/building.ts.) */
 export const DOOR_META: Record<number, { title: string }> = {
   1: { title: "The living garden" },
-  2: { title: "Coding pet" },
+  2: { title: "Mochi, the coding pet" },
   3: { title: "Birthday-seeded art" },
   4: { title: "GPU koi pond" },
   5: { title: "Recursive flowers" },
