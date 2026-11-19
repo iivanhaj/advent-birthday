@@ -71,7 +71,9 @@ export function Mochi() {
     width: 80,
     pose: "stand" as Pose,
     state: "idle" as MochiState,
+    platforms: [] as Platform[],
   });
+  const [debug, setDebug] = useState(false);
   const food = useRef<Kibble[]>([]);
   const cursor = useRef<{ x: number; y: number; at: number } | null>(null);
   const lastMeal = useRef(Date.now() - 2 * 3600_000);
@@ -114,6 +116,8 @@ export function Mochi() {
       drop(`treat-${Date.now()}`);
     };
     addEventListener("mochi:treat", onTreat);
+    const onDebug = (e: Event) => setDebug(Boolean((e as CustomEvent<boolean>).detail));
+    addEventListener("mochi:debug", onDebug);
 
     // ---- your cursor ----
     const onMove = (e: PointerEvent) => {
@@ -213,6 +217,7 @@ export function Mochi() {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       const platforms = measure();
+      s.platforms = platforms;
       const byId = new Map(platforms.map((p) => [p.id, p]));
 
       // 1. ledges move (zoom, scroll, parallax): she moves with the one she's on
@@ -360,6 +365,7 @@ export function Mochi() {
       if (channel) supabase?.removeChannel(channel);
       ateSub.unsubscribe();
       removeEventListener("mochi:treat", onTreat);
+      removeEventListener("mochi:debug", onDebug);
       removeEventListener("pointermove", onMove);
       document.documentElement.removeEventListener("pointerleave", onLeave);
       removeEventListener("resize", onResize);
@@ -376,6 +382,7 @@ export function Mochi() {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[45] overflow-hidden">
+      {debug && <RouteOverlay platforms={s.platforms} route={s.route.slice(s.i)} at={{ x: s.x, y: s.y }} />}
       {food.current.map((k) => (
         <svg key={k.id} width={10} height={10} viewBox="-5 -5 10 10" className="absolute" style={{ left: k.x - 5, top: k.y - 9 }} aria-hidden>
           <circle r={3.6} fill="#E9B98A" stroke="var(--color-line)" strokeWidth={1.2} />
@@ -391,5 +398,39 @@ export function Mochi() {
         <MochiSprite pose={s.pose} phase={s.phase} vy={s.vy} dir={s.dir} width={w} />
       </button>
     </div>
+  );
+}
+
+/**
+ * "Show her route": the page as Mochi sees it. Dashed lines are the ledges
+ * she knows about; the solid path is her current A* plan, walks as straight
+ * lines and jumps as their real ballistic arcs.
+ */
+function RouteOverlay({ platforms, route, at }: { platforms: Platform[]; route: Step[]; at: { x: number; y: number } }) {
+  const parts: string[] = [];
+  let cur = at;
+  for (const st of route) {
+    if (st.kind === "walk") {
+      parts.push(`M${cur.x} ${cur.y} L${st.to} ${st.y}`);
+      cur = { x: st.to, y: st.y };
+    } else {
+      const arc = jumpArc(st.from, st.to, GRAVITY);
+      const pts = Array.from({ length: 16 }, (_, i) => arc.at((i / 15) * arc.duration));
+      parts.push(`M${st.from.x} ${st.from.y} ` + pts.map((p) => `L${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" "));
+      cur = st.to;
+    }
+  }
+  return (
+    <svg className="absolute inset-0 h-full w-full" aria-hidden>
+      {platforms.map((p) => (
+        <g key={p.id}>
+          <line x1={p.x0} x2={p.x1} y1={p.y} y2={p.y} stroke="#4B8F8C" strokeWidth={2} strokeDasharray="5 5" />
+          <circle cx={p.x0} cy={p.y} r={2.5} fill="#4B8F8C" />
+          <circle cx={p.x1} cy={p.y} r={2.5} fill="#4B8F8C" />
+        </g>
+      ))}
+      {parts.length > 0 && <path d={parts.join(" ")} fill="none" stroke="#4B8F8C" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />}
+      {route.length > 0 && <circle cx={cur.x} cy={cur.y} r={6} fill="none" stroke="#4B8F8C" strokeWidth={2} />}
+    </svg>
   );
 }
