@@ -33,6 +33,10 @@ export function Facade({ fast, night }: { fast: boolean; night: boolean }) {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, delay: total * 0.3 }}
       />
+      {/* invisible ledges for Mochi: the cornice, the pediment's top and the awning */}
+      <rect data-mochi-platform="cornice" x={28} y={72} width={424} height={1} fill="none" />
+      <rect data-mochi-platform="chimney" x={366} y={36} width={36} height={1} fill="none" />
+      <rect data-mochi-platform="awning" x={40} y={540} width={400} height={1} fill="none" />
       {STRIPES.map((d, i) => (
         <motion.path key={d} d={d} fill="var(--color-line)" initial={{ opacity: 0 }} animate={{ opacity: 0.16 }} transition={{ delay: total * 0.75 + i * 0.03 }} />
       ))}
@@ -86,7 +90,7 @@ function Ground({ night, delay }: { night: boolean; delay: number }) {
   for (let x = -2000; x < 2480; x += 40) dashes.push(`M${x} 760 h18`);
   return (
     <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay }}>
-      <rect x={-2000} y={700} width={4480} height={16} fill={pavement} />
+      <rect data-mochi-platform="pavement" x={-2000} y={700} width={4480} height={16} fill={pavement} />
       <rect x={-2000} y={716} width={4480} height={700} fill={road} />
       <g fill="none" stroke={ink} strokeWidth={1.5} strokeLinecap="round">
         <path d="M-2000 700 H2480" vectorEffect="non-scaling-stroke" />
@@ -125,6 +129,9 @@ export function Foreground({ lit, fast }: { lit: boolean; fast: boolean }) {
         <path d="M-40 520 H-12 L-16 540 H-36 Z M-30 520 L-26 512 L-22 520" fill={lit ? "#FFE9B8" : "var(--color-paper)"} vectorEffect="non-scaling-stroke" />
         <path d="M470 686 H530 M476 686 V708 M524 686 V708 M470 672 H530 V686 M472 672 V656 H528 V672" fill="var(--color-paper)" vectorEffect="non-scaling-stroke" />
       </motion.g>
+      {/* invisible ledges for Mochi: the bench seat and the lamp's cap */}
+      <rect data-mochi-platform="bench" x={470} y={672} width={60} height={1} fill="none" />
+      <rect data-mochi-platform="lamp" x={-40} y={512} width={28} height={1} fill="none" />
     </svg>
   );
 }

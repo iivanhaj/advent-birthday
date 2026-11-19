@@ -50,6 +50,7 @@ export function WindowBoxes({ pushes, fresh, built }: { pushes: PushRow[]; fresh
           return (
             <g key={p.n}>
               <path
+                data-mochi-platform={`planter ${p.n}`}
                 d={`M${p.x0 - 1} ${p.top} H${p.x1 + 1} L${p.x1 - 1} ${p.bottom} H${p.x0 + 1} Z`}
                 fill="var(--color-paper)"
                 stroke="var(--color-line)"
@@ -63,8 +64,8 @@ export function WindowBoxes({ pushes, fresh, built }: { pushes: PushRow[]; fresh
             </g>
           );
         })}
-        {BED_SHAPES.map((d) => (
-          <path key={d} d={d} fill="var(--color-paper)" stroke="var(--color-line)" strokeWidth={1.5} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        {BED_SHAPES.map((d, i) => (
+          <path key={d} d={d} data-mochi-platform={i === 0 ? "shop box" : undefined} fill="var(--color-paper)" stroke="var(--color-line)" strokeWidth={1.5} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
         ))}
         {byDoor.has(0) && <Foliage x0={298} x1={418} y={670} />}
         {[...byDoor.entries()].map(([door, list]) => {
