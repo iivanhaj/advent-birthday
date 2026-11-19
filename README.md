@@ -4,7 +4,8 @@
 
 **An illustrated building with 11 windows, counting down to my birthday on Nov 28.**
 Every day I ship one small build, and the building comes alive with my real work:
-every `git push` lights a window, plants a flower and puts a star in the sky. Live.
+every `git push` lights a window, plants a flower, puts a star in the sky and
+feeds Mochi, the cat who lives on the site. Live.
 
 [**🌐 Visit the live site →**](https://advent-birthday-hng9.vercel.app)
 
@@ -13,10 +14,12 @@ every `git push` lights a window, plants a flower and puts a star in the sky. Li
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase_Realtime-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
 ![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white)
+![XState](https://img.shields.io/badge/XState_5-2C3E50?style=flat-square&logo=xstate&logoColor=white)
+![Doors shipped](https://img.shields.io/badge/doors_shipped-3_of_12-9E3B4C?style=flat-square)
 
 </div>
 
-![The building by day: shuttered windows for days still to come, open windows with tiny rooms and flowers in their window boxes, constellations in the sky](docs/screenshots/day.png)
+![The building by day: shuttered windows for days still to come, open windows with tiny rooms and flowers in their window boxes, constellations in the sky, and Mochi the cat somewhere on the façade](docs/screenshots/day.png)
 
 ## What you're looking at
 
@@ -30,6 +33,8 @@ every `git push` lights a window, plants a flower and puts a star in the sky. Li
   in that day's **window box** and adds a **star** to that day's
   **constellation**. Push while someone has the page open and they watch it
   happen.
+- **A cat lives here.** Mochi roams every page, climbing the planters,
+  awning and cornice, and every push drops kibble for her (see door 2).
 - **The sky is real:** Bangalore's actual sky right now (dawn, day, dusk,
   night, rain), from the Open-Meteo weather API.
 
@@ -124,7 +129,7 @@ flowchart LR
   C -- "ok" --> D["record_push()<br/>one Postgres transaction"]
   D --> E[("pushes + doors")]
   E -- "Supabase Realtime" --> F["Every open browser"]
-  F --> G["🪟 window lamp<br/>🌸 flower in its box<br/>⭐ star in its constellation"]
+  F --> G["🪟 window lamp<br/>🌸 flower in its box<br/>⭐ star in its constellation<br/>🐈 kibble for Mochi"]
 ```
 
 1. **GitHub** sends a signed `push` event to `/api/github/webhook`.
@@ -134,7 +139,8 @@ flowchart LR
    Postgres transaction that records the push (deduplicated on GitHub's
    delivery ID), lights today's window, and ships any door tagged `door:N`.
 4. **Supabase Realtime** streams the new rows over a websocket, and every open
-   page grows the flower and star in about a second.
+   page grows the flower and star in about a second, and drops a piece of
+   kibble that Mochi goes and eats.
 
 ## Under the hood
 
@@ -156,6 +162,10 @@ A few things that were fun to figure out:
 - **Resilient deploys.** The webhook and queries detect a database that hasn't
   had the latest migration yet and fall back instead of failing, so code and
   schema can ship in either order.
+- **Brain and body, kept apart.** Mochi's statechart only decides what she
+  wants; the animation loop decides how to get there. So her behaviour is
+  pure logic with unit tests, and the A\* planner and jump physics are pure
+  functions with tests of their own.
 - **Accessibility.** Every window is a real button with a spoken label, there's
   a zoom mode and keyboard navigation, and all motion respects
   `prefers-reduced-motion`.
@@ -165,10 +175,11 @@ A few things that were fun to figure out:
 | | |
 |---|---|
 | **Frontend** | Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Framer Motion · hand-drawn SVG |
+| **Mochi** | XState 5 statechart · A\* pathfinding · projectile physics · `requestAnimationFrame` loop |
 | **Backend** | Next.js route handlers · Supabase (Postgres, Row Level Security, Realtime) |
 | **Data** | GitHub push webhooks · Open-Meteo weather API |
 | **Hosting** | Vercel (auto-deploys on every push to `main`) |
-| **Tooling** | pnpm workspaces · headless-Chrome screenshot script |
+| **Tooling** | pnpm workspaces · `node:test` unit tests · headless-Chrome screenshot script |
 
 ```
 apps/web/                 the Next.js site
@@ -176,6 +187,8 @@ apps/web/                 the Next.js site
   app/door/[n]/           one page per door, sealed until its date
   app/api/github/webhook/ signed GitHub push → record_push()
   components/building/    façade, windows, window boxes, constellations, elevator
+  components/mochi/       Mochi's drawing, runtime loop, live statechart diagram
+  lib/mochi/              her statechart and world model (A*, jump arcs), with tests
   lib/                    unlock rules (IST), sky, constellations, file kinds
 packages/garden-ui/       shared design tokens, motion presets, DoorFrame
 supabase/migrations/      schema, row-level security, seed, record_push()
@@ -191,6 +204,7 @@ Vercel and the GitHub webhook, plus troubleshooting:
 pnpm install
 cp apps/web/.env.example apps/web/.env.local   # set DEV_UNLOCK_ALL=true
 pnpm dev                                       # http://localhost:3000/?preview=mixed
+pnpm --filter web test                         # unit tests (Mochi's brain and route planner)
 ```
 
 ---
