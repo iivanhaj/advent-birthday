@@ -45,7 +45,7 @@ export default async function DoorPage({ params, searchParams }: Params) {
   const back = (
     <Link
       href="/"
-      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 font-sans text-xs font-medium tracking-wide transition-colors ${n === 1 ? "border-paper/30 text-paper hover:bg-paper/10" : "border-line/30 bg-paper text-line hover:bg-glass"}`}
+      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 whitespace-nowrap font-sans text-xs font-medium tracking-wide transition-colors ${n === 1 ? "border-paper/30 text-paper hover:bg-paper/10" : "border-line/30 bg-paper text-line hover:bg-glass"}`}
     >
       ← The building
     </Link>
