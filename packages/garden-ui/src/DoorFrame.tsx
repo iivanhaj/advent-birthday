@@ -18,21 +18,22 @@ export type DoorFrameProps = {
   children: ReactNode;
 };
 
-/** The shared frame every door page lives in: a kraft title tag, the build full-bleed, a "what I learned" card. */
+/** The shared frame every door page lives in: a title card, the build full-bleed, a "what I learned" note. */
 export function DoorFrame({ n, title, dateLabel, learned = [], backLink, children }: DoorFrameProps) {
   return (
     <div className="paper-grain relative flex min-h-dvh flex-col text-line">
       <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-4 p-4 sm:p-6">
         <div className="pointer-events-auto">{backLink}</div>
         <motion.div
-          className="kraft pointer-events-auto origin-top rotate-2 px-4 py-3 shadow-[0_6px_18px_-8px_rgba(74,52,36,0.5)]"
-          initial={{ y: -40, rotate: 8, opacity: 0 }}
-          animate={{ y: 0, rotate: 2, opacity: 1, transition: { ...springs.bouncy, delay: 0.35 } }}
+          data-mochi-platform="title card"
+          className="pointer-events-auto rounded-md border border-line/25 bg-paper px-4 py-3 text-line shadow-[0_12px_32px_-12px_rgba(78,30,40,0.35)]"
+          initial={{ y: -12, opacity: 0 }}
+          animate={{ y: 0, opacity: 1, transition: { ...springs.gentle, delay: 0.3 } }}
         >
-          <p className="font-hand text-lg leading-none">
-            no. {n} · {dateLabel}
+          <p className="font-sans text-[10px] font-medium tracking-[0.16em] uppercase opacity-70">
+            No. {String(n).padStart(2, "0")} · {dateLabel}
           </p>
-          <h1 className="mt-1 font-serif text-2xl leading-tight italic sm:text-3xl">{title}</h1>
+          <h1 className="mt-1 font-serif text-2xl leading-tight sm:text-3xl">{title}</h1>
         </motion.div>
       </header>
 
@@ -51,14 +52,14 @@ function LearnedNote({ lines }: { lines: string[] }) {
         {open && (
           <motion.ul
             id="learned-note"
-            className="kraft mb-2 w-64 max-w-[calc(100vw-2rem)] origin-bottom-right -rotate-1 p-4 font-hand text-xl leading-snug shadow-[0_8px_24px_-10px_rgba(74,52,36,0.6)]"
-            initial={{ y: 30, opacity: 0, rotate: 6 }}
-            animate={{ y: 0, opacity: 1, rotate: -1, transition: springs.bouncy }}
-            exit={{ y: 20, opacity: 0, transition: springs.gentle }}
+            className="mb-2 w-72 max-w-[calc(100vw-2rem)] origin-bottom-right rounded-md border border-line/25 bg-paper p-4 font-sans text-[13px] leading-relaxed text-line shadow-[0_12px_32px_-12px_rgba(78,30,40,0.35)]"
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1, transition: { duration: 0.18 } }}
+            exit={{ y: 6, opacity: 0, transition: { duration: 0.12 } }}
           >
             {lines.slice(0, 3).map((line) => (
-              <li key={line} className="mb-1 last:mb-0">
-                — {line}
+              <li key={line} className="mb-2 border-l border-line/30 pl-3 last:mb-0">
+                {line}
               </li>
             ))}
           </motion.ul>
@@ -69,12 +70,10 @@ function LearnedNote({ lines }: { lines: string[] }) {
         aria-expanded={open}
         aria-controls="learned-note"
         onClick={() => setOpen((o) => !o)}
-        className="kraft px-4 py-1.5 font-hand text-xl shadow-[0_6px_16px_-8px_rgba(74,52,36,0.6)]"
-        whileHover={{ y: -3, rotate: -2 }}
-        whileTap={{ scale: 0.94 }}
-        transition={springs.squish}
+        className="rounded-full border border-line/30 bg-paper px-4 py-2 font-sans text-xs font-medium tracking-wide text-line shadow-[0_8px_24px_-12px_rgba(78,30,40,0.35)] transition-colors hover:bg-glass"
+        whileTap={{ scale: 0.97 }}
       >
-        what I learned
+        What I learned
       </motion.button>
     </div>
   );

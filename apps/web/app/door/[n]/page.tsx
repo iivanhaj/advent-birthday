@@ -37,8 +37,11 @@ export default async function DoorPage({ params, searchParams }: Params) {
 
   const label = dateLabel(doorDate(n));
   const back = (
-    <Link href="/" className={`font-hand text-2xl underline ${n === 1 ? "text-paper" : "text-line"} decoration-dashed underline-offset-4 hover:opacity-70`}>
-      ← back to the building
+    <Link
+      href="/"
+      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 font-sans text-xs font-medium tracking-wide transition-colors ${n === 1 ? "border-paper/30 text-paper hover:bg-paper/10" : "border-line/30 bg-paper text-line hover:bg-glass"}`}
+    >
+      ← The building
     </Link>
   );
 
