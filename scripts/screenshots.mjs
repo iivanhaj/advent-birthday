@@ -152,6 +152,15 @@ await shot("greenhouse", "/door/1?preview=mixed", {
     await sleep(1000);
   },
 });
+// Door 2: Mochi's home, with her route overlay on
+await shot("mochi", "/door/2?preview=mixed", {
+  h: 1000,
+  wait: 6000,
+  before: async () => {
+    await evaluate(`dispatchEvent(new CustomEvent('mochi:debug', { detail: true }))`);
+    await sleep(2500);
+  },
+});
 await shot("phone", "/?preview=mixed&sky=night", {
   w: 390,
   h: 844,

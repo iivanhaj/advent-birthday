@@ -49,6 +49,30 @@ the same push is a star in that day's constellation.
 - **No overlaps, by construction:** every plant stays inside its pot's column
   and is height-capped under the curve of the glass.
 
+## Door 2 · Mochi, the coding pet
+
+![Door 2: Mochi's home, with her live statechart, her hunger and the route overlay showing the ledges she can climb](docs/screenshots/mochi.png)
+
+Mochi is a fine-line cat who lives on **every page** of the site. She wanders,
+grooms, naps, chases your cursor and climbs the building: the planters,
+the awning, the cornice and the bench are all ledges she can jump between.
+**Every `git push` drops a piece of kibble** onto every open screen, live, and
+she works out how to get to it.
+
+- **A statechart brain** (XState): idle, wander, sit, groom, chase, watch,
+  hungry, toFood, eating, purr, asleep. It only decides *what* she wants;
+  delays and randomness are injectable, so every behaviour has a unit test.
+- **The page is her level.** Elements marked `data-mochi-platform` become
+  one-way ledges, measured live while the camera zooms and scrolls. **A\***
+  over (ledge, x) states finds the cheapest mix of walks and jumps.
+- **Real jumps.** Each one is a projectile arc solved through an apex above
+  the higher ledge: y = y₀ + v₀t + ½gt².
+- **Hunger from the push log**, not a timer: it's the time since the last
+  push, so every device agrees on how hungry she is.
+- **Her home page** (door 2) shows her mind live: the statechart lights up as
+  she changes state, and "Show her route" draws the ledges she can see and
+  the path she's planning.
+
 <table>
 <tr>
 <td width="50%"><img src="docs/screenshots/night.png" alt="The building at night: windows I've worked in glow with lamplight; constellations and the moon in the sky"></td>
@@ -79,7 +103,7 @@ One build a day, about 2 hours each. Each one is something I wanted to learn.
 |---|---|---|---|---|
 | 0 | Tue 17 | [The foundation](https://advent-birthday-hng9.vercel.app) | the building, webhook, unlock rules | ✅ shipped |
 | 1 | Wed 18 | [The living garden](https://advent-birthday-hng9.vercel.app/door/1) | Realtime, seeded generative art, SVG | ✅ shipped |
-| 2 | Thu 19 | Coding pet (PWA) | state machines, service workers | 🔒 |
+| 2 | Thu 19 | [Mochi, the coding pet](https://advent-birthday-hng9.vercel.app/door/2) | statecharts, A* pathfinding, projectile physics | ✅ shipped |
 | 3 | Fri 20 | Birthday-seeded art | seeded randomness, noise | 🔒 |
 | 4 | Sat 21 | GPU koi pond | spatial hashing, WebGPU | 🔒 |
 | 5 | Sun 22 | Recursive flowers | L-systems, Rust → WASM | 🔒 |
