@@ -1,17 +1,20 @@
-import { test } from "node:test";
+import { after, test } from "node:test";
 import assert from "node:assert/strict";
 import { createActor } from "xstate";
 import { HUNGRY_AT, NAP_AFTER, leafState, mochiMachine } from "./machine.ts";
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const running: { stop(): void }[] = [];
+after(() => running.forEach((a) => a.stop())); // pending timers would otherwise keep node alive
 
 /** The real machine with every delay shrunk to a few milliseconds and a fixed coin. */
-function start(coin = false) {
+function start(coin = false, delays: Partial<Record<"idle" | "sit" | "groom" | "eat" | "purr", number>> = {}) {
   const machine = mochiMachine.provide({
-    delays: { idle: 5, sit: 5, groom: 5, eat: 5, purr: 5 },
+    delays: { idle: 5, sit: 5, groom: 5, eat: 5, purr: 5, ...delays },
     guards: { coin: () => coin },
   });
   const actor = createActor(machine).start();
+  running.push(actor);
   const state = () => leafState(actor.getSnapshot().value);
   return { actor, state };
 }
@@ -30,7 +33,7 @@ test("idle turns into a wander, and arriving makes her sit", async () => {
 });
 
 test("the coin can send her grooming instead", async () => {
-  const { state } = start(true);
+  const { state } = start(true, { groom: 10_000 });
   await wait(15);
   assert.equal(state(), "groom");
 });
