@@ -5,7 +5,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --experimental-strip-types --no-warnings=ExperimentalWarning \"lib/**/*.test.ts\""
   },
   "dependencies": {
     "@birthday-garden/garden-ui": "workspace:*",
@@ -16,7 +17,8 @@
     "next": "^16.4.6",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "three": "^0.187.0"
+    "three": "^0.187.0",
+    "xstate": "^5.33.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.5",

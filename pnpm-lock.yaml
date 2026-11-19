@@ -37,6 +37,9 @@ importers:
       three:
         specifier: ^0.187.0
         version: 0.187.0
+      xstate:
+        specifier: ^5.33.4
+        version: 5.33.4
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4.3.5
@@ -937,6 +940,9 @@ packages:
     engines: {node: '>= 8'}
     hasBin: true
 
+  xstate@5.33.4:
+    resolution: {integrity: sha512-eGNMu3BNqU0Z85P+ouYG5OCZqIABU+QsW6vUieFt9p9gOGs3C+BL10Exg7XdRPSXPQKlP6XoYpYf93r9VmW8mQ==}
+
   zustand@4.5.7:
     resolution: {integrity: sha512-CHOUy7mu3lbD6o6LJLfllpjkzhHXSBlX8B9+qPddUsIfeF5S/UZ5q0kmCsnRqT1UHFQZchNFDDzMbQsuesHWlw==}
     engines: {node: '>=12.7.0'}
@@ -1691,6 +1697,8 @@ snapshots:
   which@2.0.2:
     dependencies:
       isexe: 2.0.0
+
+  xstate@5.33.4: {}
 
   zustand@4.5.7(@types/react@19.3.0)(react@19.3.1):
     dependencies:
