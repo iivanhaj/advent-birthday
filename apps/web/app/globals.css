@@ -211,7 +211,58 @@ html {
   animation: card-in 0.18s ease-out both;
 }
 
+/* ---- Mochi ---- */
+@keyframes mochi-tail {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(9deg); }
+}
+.mochi-tail {
+  transform-box: view-box;
+  transform-origin: 48px 92px;
+  animation: mochi-tail 2.4s ease-in-out infinite;
+}
+@keyframes mochi-nibble {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 3px; }
+}
+.mochi-nibble {
+  animation: mochi-nibble 0.35s ease-in-out infinite;
+}
+@keyframes mochi-groom {
+  0%, 100% { transform: rotate(-150deg); }
+  50% { transform: rotate(-125deg); }
+}
+.mochi-groom {
+  animation: mochi-groom 0.5s ease-in-out infinite;
+}
+@keyframes mochi-breathe {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.05); }
+}
+.mochi-breathe {
+  animation: mochi-breathe 3.2s ease-in-out infinite;
+}
+@keyframes mochi-zz {
+  0% { opacity: 0; translate: 0 4px; }
+  30%, 70% { opacity: 1; }
+  100% { opacity: 0; translate: 6px -10px; }
+}
+.mochi-zz {
+  animation: mochi-zz 2.6s ease-out infinite;
+}
+@keyframes mochi-pop {
+  from { opacity: 0; translate: 0 6px; }
+}
+.mochi-pop {
+  animation: mochi-pop 0.3s ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .mochi-tail,
+  .mochi-nibble,
+  .mochi-groom,
+  .mochi-breathe,
+  .mochi-zz,
   .card-in,
   .flower-sway,
   .bloom-in,
