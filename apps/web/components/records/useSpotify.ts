@@ -43,6 +43,8 @@ function loadApi(): Promise<IFrameAPI> {
 export function useSpotify(firstTrack: string) {
   const host = useRef<HTMLDivElement>(null);
   const ctl = useRef<Controller | null>(null);
+  /** A track picked before the player finished loading: played as soon as it's ready. */
+  const pending = useRef<string | null>(null);
   const [ready, setReady] = useState(false);
   const [state, setState] = useState({ position: 0, duration: 0, paused: true });
 
@@ -58,6 +60,10 @@ export function useSpotify(firstTrack: string) {
         ctl.current = c;
         c.addListener("playback_update", (e) => setState({ position: e.data.position, duration: e.data.duration, paused: e.data.isPaused }));
         setReady(true);
+        if (pending.current) {
+          c.loadUri(`spotify:track:${pending.current}`);
+          pending.current = null;
+        }
       });
     });
     return () => {
@@ -71,7 +77,10 @@ export function useSpotify(firstTrack: string) {
 
   const play = useCallback((trackId: string) => {
     const c = ctl.current;
-    if (!c) return;
+    if (!c) {
+      pending.current = trackId;
+      return;
+    }
     c.loadUri(`spotify:track:${trackId}`);
     // Browsers may block starting audio inside the iframe; then the embed's own play button does it.
     setTimeout(() => c.play(), 300);

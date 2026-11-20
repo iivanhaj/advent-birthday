@@ -328,10 +328,12 @@ export function render(ctx: Ctx, p: Plan, size: number, text?: { title: string; 
         if (text) {
           ctx.fillStyle = INK;
           ctx.textAlign = "center";
-          ctx.font = `italic ${at(0.06)}px var(--font-playfair), Georgia, serif`;
-          ctx.fillText(text.title.length > 22 ? `${text.title.slice(0, 21)}…` : text.title, 0, -at(0.12), at(0.5));
-          ctx.font = `500 ${at(0.034)}px var(--font-inter), sans-serif`;
-          ctx.fillText(text.sub, 0, at(0.19), at(0.5));
+          // Text stays inside the label: the line at height y can be at most 2·√(r² − y²) wide.
+          const fit = (y: number) => 2 * Math.sqrt(Math.max(0, at(0.27) ** 2 - y ** 2));
+          ctx.font = `italic ${at(0.055)}px Georgia, serif`;
+          ctx.fillText(text.title.length > 22 ? `${text.title.slice(0, 21)}…` : text.title, 0, -at(0.1), fit(at(0.12)));
+          ctx.font = `500 ${at(0.03)}px sans-serif`;
+          ctx.fillText(text.sub, 0, at(0.16), fit(at(0.16)));
         }
         ctx.fillStyle = "#1c1519";
         ctx.beginPath();
