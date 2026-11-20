@@ -185,7 +185,6 @@ export function render(ctx: Ctx, p: Plan, size: number, text?: { title: string; 
   const R = size / 2 - 2;
   const at = (n: number) => n * R;
   ctx.save();
-  ctx.clearRect(0, 0, size, size);
   ctx.translate(size / 2, size / 2);
   ctx.save();
   ctx.beginPath();

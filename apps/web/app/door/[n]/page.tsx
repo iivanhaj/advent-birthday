@@ -8,6 +8,7 @@ import { DOOR_COUNT, dateLabel, doorDate, doorForDate, istDate, isDoorReachable 
 import { DoorPlaceholder, SealedDoor } from "./placeholders";
 import { Greenhouse } from "./Greenhouse";
 import { MochiHome } from "./MochiHome";
+import { BirthdayRecords } from "./BirthdayRecords";
 
 /** Each door's "what I learned" card (written after shipping). */
 const LEARNED: Record<number, string[]> = {
@@ -74,6 +75,15 @@ export default async function DoorPage({ params, searchParams }: Params) {
     return (
       <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
         <MochiHome initialPushes={pushes} today={istDate()} />
+      </DoorFrame>
+    );
+  }
+
+  // Door 3: birthday records.
+  if (n === 3) {
+    return (
+      <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
+        <BirthdayRecords />
       </DoorFrame>
     );
   }
