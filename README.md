@@ -2,45 +2,76 @@
 
 # birthday ♡ advent calendar
 
-**An illustrated building with 11 windows, counting down to my birthday on Nov 28.**
-Every day I ship one small build, and the building comes alive with my real work:
-every `git push` lights a window, plants a flower, puts a star in the sky and
-feeds Mochi, the cat who lives on the site. Live.
+### A tiny illustrated building that counts down to my birthday, one window a day.
+Peek inside the windows, pet the cat, and paint a record from **your** birthday.
 
-[**🌐 Visit the live site →**](https://advent-birthday-hng9.vercel.app)
+<br/>
 
+[**✨ Open the building →**](https://advent-birthday-hng9.vercel.app)
+&nbsp;&nbsp;·&nbsp;&nbsp;
+[**🎵 Paint your birthday records →**](https://advent-birthday-hng9.vercel.app/door/3)
+&nbsp;&nbsp;·&nbsp;&nbsp;
+[**🐈 Meet Mochi →**](https://advent-birthday-hng9.vercel.app/door/2)
+
+<br/>
+
+![Doors open](https://img.shields.io/badge/doors_open-4_of_12-9E3B4C?style=flat-square)
+![Next door](https://img.shields.io/badge/next_door-every_midnight_IST-F2C45A?style=flat-square)
 [![Live on Vercel](https://img.shields.io/badge/live-advent--birthday-9E3B4C?style=flat-square&logo=vercel&logoColor=white)](https://advent-birthday-hng9.vercel.app)
 ![Next.js](https://img.shields.io/badge/Next.js_16-000?style=flat-square&logo=nextdotjs)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase_Realtime-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
-![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white)
 ![XState](https://img.shields.io/badge/XState_5-2C3E50?style=flat-square&logo=xstate&logoColor=white)
-![Doors shipped](https://img.shields.io/badge/doors_shipped-4_of_12-9E3B4C?style=flat-square)
 
 </div>
 
-![The building by day: shuttered windows for days still to come, open windows with tiny rooms and flowers in their window boxes, constellations in the sky, and Mochi the cat somewhere on the façade](docs/screenshots/day.png)
+[![The building by day: shuttered windows for days still to come, open windows with tiny rooms and flowers in their window boxes, constellations in the sky, and Mochi the cat on the bench](docs/screenshots/day.png)](https://advent-birthday-hng9.vercel.app)
+
+## Try it: six things to do in two minutes
+
+1. **[Peek in a window.](https://advent-birthday-hng9.vercel.app)** Hover (or tap) one: the shutters swing open on
+   a tiny room. Click an open one and the camera **flies through it** into
+   that day's build. Future windows rattle but won't open. No peeking.
+2. **Find the cat.** Mochi wanders every page. Bring your cursor near her
+   and she'll chase it; **click her** and she purrs; ignore her long enough
+   and she curls up for a nap.
+3. **[Watch her think.](https://advent-birthday-hng9.vercel.app/door/2)** On her page, her brain is drawn live
+   and lights up as she changes mood. Press **Show her route** to see the
+   ledges she can climb and the path she's planning.
+4. **[Paint a record from your birthday.](https://advent-birthday-hng9.vercel.app/door/3)** Enter your birthday
+   and the whole crate repaints: one unique record per song, made from your
+   date. Switch between *Dreamy*, *Meadow* and *Painted vinyl*, then
+   **download yours** or send the link to a friend: it opens your exact crate.
+5. **Put a record on.** Pull one out of the crate, drop it on the turntable,
+   and it plays (through Spotify) while the tonearm follows the song.
+6. **Come back tonight.** The sky is Bangalore's real sky right now: at
+   night the lamps come on in every window I've worked in, and when it rains
+   in Bangalore, it rains on the building. A new door opens every midnight
+   (India time) until **Nov 28**, when the whole building lights up.
+
+> **It's alive while you watch.** Every `git push` I make lights a window,
+> plants a flower in its window box, adds a star to the sky and drops a piece
+> of kibble for Mochi, live, on every open screen. Leave it open in a tab.
 
 ## What you're looking at
 
-- **Each window is a door.** Hover (or tap) to swing its shutters open and peek
-  at the tiny room inside. Click an open window and the camera **flies through
-  it** into that door's page, where that day's build lives.
+- **Each window is a door**, and each door is a small build I made that day.
 - **Future windows stay shuttered.** The server decides what's open in India
   time, so changing your clock doesn't help, and sealed pages never send their
   content to the browser.
 - **The building is made of my commits.** Every push plants a fine-line flower
   in that day's **window box** and adds a **star** to that day's
-  **constellation**. Push while someone has the page open and they watch it
-  happen.
+  **constellation**.
 - **A cat lives here.** Mochi roams every page, climbing the planters,
-  awning and cornice, and every push drops kibble for her (see door 2).
-- **The sky is real:** Bangalore's actual sky right now (dawn, day, dusk,
-  night, rain), from the Open-Meteo weather API.
+  awning and cornice (door 2).
+- **The sky is real:** Bangalore's sky right now (dawn, day, dusk, night,
+  rain), from the Open-Meteo weather API.
 
 ## Door 1 · The living garden
 
 ![Door 1: a fine-line glass greenhouse at night; one pot per door on a bench, each push grown as a flower tinted by the tech stack it touched; constellations outside the glass](docs/screenshots/greenhouse.png)
+
+**[▶ Visit the greenhouse](https://advent-birthday-hng9.vercel.app/door/1)** · hover a flower to see the commit that grew it.
 
 A glass greenhouse under the night sky. **Inside**, one pot per door: every push
 grows a new stem in its day's pot, so busy days become bushy plants. **Outside**,
@@ -57,6 +88,8 @@ the same push is a star in that day's constellation.
 ## Door 2 · Mochi, the coding pet
 
 ![Door 2: Mochi's home, with her live statechart, her hunger and the route overlay showing the ledges she can climb](docs/screenshots/mochi.png)
+
+**[▶ Meet Mochi](https://advent-birthday-hng9.vercel.app/door/2)** · pet her, drop her a treat, show her route.
 
 Mochi is a fine-line cat who lives on **every page** of the site. She wanders,
 grooms, naps, chases your cursor and climbs the building: the planters,
@@ -81,6 +114,8 @@ she works out how to get to it.
 ## Door 3 · Birthday records
 
 ![Door 3: a fine-line turntable playing a watercolour-painted record, the Spotify player beside it, and a crate of painted records below](docs/screenshots/records.png)
+
+**[▶ Paint your birthday records](https://advent-birthday-hng9.vercel.app/door/3)** · enter your birthday, pick a song, download your record.
 
 A crate of eight songs, and every song gets **its own record, painted by my
 birthday**. Pull one out, it drops onto the turntable, spins up, and plays
@@ -126,7 +161,7 @@ through Spotify while the tonearm rides the record with the song's progress.
 
 ## The 11 doors
 
-One build a day, about 2 hours each. Each one is something I wanted to learn.
+One build a day, about 2 hours each, each one something I wanted to learn. A new door opens every midnight, India time.
 
 | # | Date | Build | Learning | Status |
 |---|---|---|---|---|
@@ -236,6 +271,12 @@ pnpm --filter web test                         # unit tests (Mochi, route planne
 ---
 
 <div align="center">
+
+**Made a crate you love? Send someone the link.** And if this made you smile,
+a ⭐ on the repo makes my day.
+
+[**✨ Open the building →**](https://advent-birthday-hng9.vercel.app)
+
 <sub>Made by <a href="https://github.com/iivanhaj">@iivanhaj</a> · one door a day until Nov 28 ·
 <a href="https://advent-birthday-hng9.vercel.app">advent-birthday-hng9.vercel.app</a></sub>
 </div>
