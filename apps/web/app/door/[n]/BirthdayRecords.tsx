@@ -28,6 +28,8 @@ export function BirthdayRecords() {
   const [current, setCurrent] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const spotify = useSpotify(SONGS[0].id);
+  // Development only: ?demo=1 pretends a song is playing, so the README animation can show the turntable spinning.
+  const [demo, setDemo] = useState<number | null>(null);
 
   // read ?birthday=MM-DD&theme=… once, so shared links open the same crate
   useEffect(() => {
@@ -36,7 +38,14 @@ export function BirthdayRecords() {
     const t = q.get("theme");
     if (b && monthDay(b)) setBirthday(monthDay(b)!);
     if (t && THEMES.some((x) => x.id === t)) setTheme(t as Theme);
+    if (process.env.NODE_ENV !== "production" && q.has("demo")) setDemo(Date.now());
   }, []);
+  const [, tick] = useState(0);
+  useEffect(() => {
+    if (demo == null) return;
+    const t = setInterval(() => tick((n) => n + 1), 200);
+    return () => clearInterval(t);
+  }, [demo]);
   useEffect(() => {
     const q = new URLSearchParams(location.search);
     if (birthday === MY_BIRTHDAY) q.delete("birthday");
@@ -49,8 +58,8 @@ export function BirthdayRecords() {
 
   const song = current == null ? null : SONGS[current];
   const { position, duration, paused } = spotify.state;
-  const playing = song != null && !paused && duration > 0;
-  const progress = duration > 0 ? position / duration : 0;
+  const playing = song != null && ((!paused && duration > 0) || demo != null);
+  const progress = demo != null && song ? ((Date.now() - demo) / 60000) % 1 : duration > 0 ? position / duration : 0;
   const mine = birthday === MY_BIRTHDAY;
 
   function pick(i: number) {
