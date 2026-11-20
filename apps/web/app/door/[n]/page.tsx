@@ -22,6 +22,11 @@ const LEARNED: Record<number, string[]> = {
     "A* over (ledge, x) states turns 'get to the kibble' into a route of walks and jumps",
     "a jump is three facts (start, end, apex height); the projectile equations do the rest",
   ],
+  3: [
+    "separate the plan from the paint: a seeded list of brush strokes is pure data, so determinism is testable without a canvas",
+    "watercolour is many nearly transparent layers of a slightly different deformed polygon, not one soft blob",
+    "Spotify's iFrame API reports playback position, which is all a tonearm needs",
+  ],
 };
 
 export const dynamic = "force-dynamic";

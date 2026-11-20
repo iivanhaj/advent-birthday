@@ -161,6 +161,15 @@ await shot("mochi", "/door/2?preview=mixed", {
     await sleep(2500);
   },
 });
+// Door 3: birthday records, with one on the turntable
+await shot("records", "/door/3?theme=dreamy", {
+  h: 1000,
+  wait: 8000,
+  before: async () => {
+    await evaluate(`document.querySelector('button[aria-label^="Sure Thing"]')?.click()`);
+    await sleep(2500);
+  },
+});
 await shot("phone", "/?preview=mixed&sky=night", {
   w: 390,
   h: 844,

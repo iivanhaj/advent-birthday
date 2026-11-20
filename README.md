@@ -15,7 +15,7 @@ feeds Mochi, the cat who lives on the site. Live.
 ![Supabase](https://img.shields.io/badge/Supabase_Realtime-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
 ![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white)
 ![XState](https://img.shields.io/badge/XState_5-2C3E50?style=flat-square&logo=xstate&logoColor=white)
-![Doors shipped](https://img.shields.io/badge/doors_shipped-3_of_12-9E3B4C?style=flat-square)
+![Doors shipped](https://img.shields.io/badge/doors_shipped-4_of_12-9E3B4C?style=flat-square)
 
 </div>
 
@@ -78,6 +78,30 @@ she works out how to get to it.
   she changes state, and "Show her route" draws the ledges she can see and
   the path she's planning.
 
+## Door 3 · Birthday records
+
+![Door 3: a fine-line turntable playing a watercolour-painted record, the Spotify player beside it, and a crate of painted records below](docs/screenshots/records.png)
+
+A crate of eight songs, and every song gets **its own record, painted by my
+birthday**. Pull one out, it drops onto the turntable, spins up, and plays
+through Spotify while the tonearm rides the record with the song's progress.
+
+- **Birthday × song.** Each record's seed is the birthday (month and day
+  only) mixed with the song's Spotify ID: every song looks different, and the
+  same birthday always paints the same crate.
+- **Plan, then paint.** A seeded `plan()` turns the seed into pure brush
+  instructions (unit-tested: deterministic, on the disc, evenly spaced
+  flowers via Poisson-disc sampling); `render()` paints them. Watercolour is
+  dozens of nearly transparent layers of a recursively deformed polygon.
+- **Three themes** over the same seed: *Dreamy* (swirls, dotted rings,
+  glitter), *Meadow* (vines and inked flowers) and *Painted vinyl* (black
+  vinyl, painted band, printed label).
+- **A turntable with weight.** The platter eases up to 33⅓ rpm and coasts
+  down; the sheen stays still while the record turns under it.
+- **Make yours.** Enter any birthday to repaint the whole crate; theme and
+  birthday live in the URL, so a crate can be shared exactly. Download any
+  record as a 3000 px PNG.
+
 <table>
 <tr>
 <td width="50%"><img src="docs/screenshots/night.png" alt="The building at night: windows I've worked in glow with lamplight; constellations and the moon in the sky"></td>
@@ -109,7 +133,7 @@ One build a day, about 2 hours each. Each one is something I wanted to learn.
 | 0 | Tue 17 | [The foundation](https://advent-birthday-hng9.vercel.app) | the building, webhook, unlock rules | ✅ shipped |
 | 1 | Wed 18 | [The living garden](https://advent-birthday-hng9.vercel.app/door/1) | Realtime, seeded generative art, SVG | ✅ shipped |
 | 2 | Thu 19 | [Mochi, the coding pet](https://advent-birthday-hng9.vercel.app/door/2) | statecharts, A* pathfinding, projectile physics | ✅ shipped |
-| 3 | Fri 20 | Birthday-seeded art | seeded randomness, noise | 🔒 |
+| 3 | Fri 20 | [Birthday records](https://advent-birthday-hng9.vercel.app/door/3) | seeded generative painting, Spotify iFrame API | ✅ shipped |
 | 4 | Sat 21 | GPU koi pond | spatial hashing, WebGPU | 🔒 |
 | 5 | Sun 22 | Recursive flowers | L-systems, Rust → WASM | 🔒 |
 | 6 | Mon 23 | Cozy room, real sky | caching, edge functions | 🔒 |
@@ -177,7 +201,7 @@ A few things that were fun to figure out:
 | **Frontend** | Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Framer Motion · hand-drawn SVG |
 | **Mochi** | XState 5 statechart · A\* pathfinding · projectile physics · `requestAnimationFrame` loop |
 | **Backend** | Next.js route handlers · Supabase (Postgres, Row Level Security, Realtime) |
-| **Data** | GitHub push webhooks · Open-Meteo weather API |
+| **Data** | GitHub push webhooks · Open-Meteo weather API · Spotify embed (iFrame API) |
 | **Hosting** | Vercel (auto-deploys on every push to `main`) |
 | **Tooling** | pnpm workspaces · `node:test` unit tests · headless-Chrome screenshot script |
 
@@ -189,6 +213,8 @@ apps/web/                 the Next.js site
   components/building/    façade, windows, window boxes, constellations, elevator
   components/mochi/       Mochi's drawing, runtime loop, live statechart diagram
   lib/mochi/              her statechart and world model (A*, jump arcs), with tests
+  lib/records/            door 3's seeded record painter and the song list
+  components/records/     record disc, turntable, crate, Spotify player hook
   lib/                    unlock rules (IST), sky, constellations, file kinds
 packages/garden-ui/       shared design tokens, motion presets, DoorFrame
 supabase/migrations/      schema, row-level security, seed, record_push()
@@ -204,7 +230,7 @@ Vercel and the GitHub webhook, plus troubleshooting:
 pnpm install
 cp apps/web/.env.example apps/web/.env.local   # set DEV_UNLOCK_ALL=true
 pnpm dev                                       # http://localhost:3000/?preview=mixed
-pnpm --filter web test                         # unit tests (Mochi's brain and route planner)
+pnpm --filter web test                         # unit tests (Mochi, route planner, record painter)
 ```
 
 ---
