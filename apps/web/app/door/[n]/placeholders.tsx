@@ -6,26 +6,33 @@ import { springs } from "@birthday-garden/garden-ui";
 import { Room } from "@/components/building/Room";
 
 /**
- * What a door shows until its build lands. It opens on exactly the frame the
- * fly-through ended on (the room, full screen, behind glass) so the jump from
- * calendar to door page has no visible cut. Each door replaces this on its day.
+ * What a door shows until its build lands: the window's little room, framed
+ * in an arch on paper, with the door's title. The fly-through lands on the
+ * same paper and title, so opening the window has no visible cut.
  */
-export function DoorPlaceholder({ n, lit }: { n: number; lit: boolean }) {
+export function DoorPlaceholder({ n, title, lit }: { n: number; title: string; lit: boolean }) {
   return (
-    <div
-      className="relative flex min-h-dvh items-end justify-center"
-      style={{ background: lit ? "radial-gradient(ellipse at 50% 28%, #FFF1CC 0%, #FBD99A 50%, #EFB173 100%)" : "var(--color-glass)" }}
-    >
-      <div className="absolute inset-0 flex items-end justify-center pb-[6dvh]">
-        <Room n={n} width={2} className="h-[72%] w-[72%]" />
-      </div>
-      <motion.p
-        className="kraft relative mb-[4dvh] -rotate-1 px-4 py-2 font-hand text-xl shadow-[0_8px_20px_-10px_rgba(74,52,36,0.6)]"
-        initial={{ y: 30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1, transition: { ...springs.bouncy, delay: 0.5 } }}
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-8 px-6 pt-24 pb-16 text-center text-line">
+      <motion.div
+        className="relative h-64 w-48 overflow-hidden border-[1.5px] border-line sm:h-80 sm:w-60"
+        style={{
+          borderRadius: "120px 120px 6px 6px / 120px 120px 6px 6px",
+          background: lit ? "radial-gradient(ellipse at 50% 30%, #FFF1CC 0%, #FBE3B0 60%, #F6D3A0 100%)" : "var(--color-glass)",
+        }}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0, transition: { ...springs.gentle, delay: 0.15 } }}
       >
-        this room is still being furnished… the build lands on its day
-      </motion.p>
+        <div className="absolute inset-0 flex items-end justify-center pb-4">
+          <Room n={n} className="h-[78%] w-[78%]" />
+        </div>
+      </motion.div>
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0, transition: { ...springs.gentle, delay: 0.3 } }}>
+        <p className="font-sans text-[11px] font-medium tracking-[0.2em] uppercase opacity-70">No. {String(n).padStart(2, "0")}</p>
+        <h2 className="mt-2 font-serif text-3xl sm:text-5xl">{title}</h2>
+        <p className="mx-auto mt-3 max-w-sm font-sans text-sm leading-relaxed opacity-80">
+          {lit ? "Work on this room has started. The build lands later today." : "This room is still being furnished. The build lands on its day."}
+        </p>
+      </motion.div>
     </div>
   );
 }
@@ -47,9 +54,9 @@ export function SealedDoor({ n, dateLabel, backLink }: { n: number; dateLabel: s
         <span className="h-full w-1/2 bg-paper" style={{ backgroundImage: louvers }} />
       </motion.div>
       <div>
-        <p className="font-hand text-2xl">no. {n}</p>
-        <h1 className="font-serif text-4xl italic sm:text-5xl">this window is still shuttered</h1>
-        <p className="mt-2 font-hand text-2xl">it opens {dateLabel}. no peeking.</p>
+        <p className="font-sans text-[11px] font-medium tracking-[0.2em] uppercase opacity-70">No. {String(n).padStart(2, "0")}</p>
+        <h1 className="mt-2 font-serif text-4xl sm:text-5xl">Still shuttered</h1>
+        <p className="mt-3 font-sans text-sm opacity-80">It opens {dateLabel}. No peeking.</p>
       </div>
     </div>
   );

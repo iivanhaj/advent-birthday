@@ -11,7 +11,6 @@ import { browserClient } from "@/lib/supabase/browser";
 import { Elevator } from "./Elevator";
 import { Facade, Foreground } from "./Facade";
 import { Fireworks } from "./Fireworks";
-import { Room } from "./Room";
 import { Sky } from "./Sky";
 import { useParallax } from "./useParallax";
 import { Window, type Peek } from "./Window";
@@ -36,9 +35,11 @@ const FLOOR_ORDER = { ground: 0, first: 1, second: 2, roof: 3 } as const;
  * scene's backdrop (so there's no flash of a different picture) instead of the
  * little room drawing.
  */
-const DOOR_SCENES: Record<number, { background: string; caption: string }> = {
-  1: { background: "linear-gradient(180deg, #1C1840 0%, #352D64 55%, #554784 100%)", caption: "the living garden" },
+const DOOR_SCENES: Record<number, { background: string; caption: string; dark: boolean }> = {
+  1: { background: "linear-gradient(180deg, #1C1840 0%, #352D64 55%, #554784 100%)", caption: "The living garden", dark: true },
 };
+/** Every other door page sits on paper, so the window opens onto paper with the door's title. */
+const sceneFor = (n: number) => DOOR_SCENES[n] ?? { background: "var(--color-paper)", caption: DOOR_META[n].title, dark: false };
 
 export function BuildingScene({ initialDoors, todayDoor, sleeps, dateLabels, sky, initialPushes }: Props) {
   const router = useRouter();
@@ -317,36 +318,31 @@ export function BuildingScene({ initialDoors, todayDoor, sleeps, dateLabels, sky
 
       {cameraOn && built && <Elevator floor={floor} onFloor={chooseFloor} />}
 
-      {/* the fly-through: the window grows until its room fills the screen */}
+      {/* the fly-through: the window grows until it fills the screen, landing on the door page's own backdrop */}
       <AnimatePresence>
-        {flying && (
-          <motion.div
-            className="fixed z-[60] overflow-hidden"
-            style={{
-              // Doors with their own scene fly into that scene's backdrop; the rest into their room.
-              background: DOOR_SCENES[flying.n]?.background ?? (flying.lit ? "radial-gradient(ellipse at 50% 28%, #FFF1CC 0%, #FBD99A 50%, #EFB173 100%)" : "var(--color-glass)"),
-              border: "2px solid var(--color-line)",
-            }}
-            initial={{ top: flying.rect.top, left: flying.rect.left, width: flying.rect.width, height: flying.rect.height, borderRadius: 24 }}
-            animate={{ top: 0, left: 0, width: "100vw", height: "100dvh", borderRadius: 0 }}
-            transition={{ type: "spring", stiffness: 90, damping: 18, mass: 0.9 }}
-            onAnimationComplete={() => router.push(`/door/${flying.n}`)}
-          >
-            {DOOR_SCENES[flying.n] ? (
-              <motion.p
-                className="absolute inset-x-0 top-[42%] text-center font-serif text-3xl text-paper italic sm:text-5xl"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0, transition: { delay: 0.35, duration: 0.6 } }}
+        {flying &&
+          (() => {
+            const scene = sceneFor(flying.n);
+            return (
+              <motion.div
+                className={`fixed z-[60] overflow-hidden ${scene.dark ? "text-paper" : "text-line"}`}
+                style={{ background: scene.background, border: "2px solid var(--color-line)" }}
+                initial={{ top: flying.rect.top, left: flying.rect.left, width: flying.rect.width, height: flying.rect.height, borderRadius: 24 }}
+                animate={{ top: 0, left: 0, width: "100vw", height: "100dvh", borderRadius: 0 }}
+                transition={{ type: "spring", stiffness: 90, damping: 18, mass: 0.9 }}
+                onAnimationComplete={() => router.push(`/door/${flying.n}`)}
               >
-                {DOOR_SCENES[flying.n].caption}
-              </motion.p>
-            ) : (
-              <div className="absolute inset-0 flex items-end justify-center pb-[6dvh]">
-                <Room n={flying.n} width={2} className="h-[72%] w-[72%]" />
-              </div>
-            )}
-          </motion.div>
-        )}
+                <motion.div
+                  className="absolute inset-x-0 top-[40%] px-6 text-center"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0, transition: { delay: 0.35, duration: 0.6 } }}
+                >
+                  <p className="font-sans text-[11px] font-medium tracking-[0.2em] uppercase opacity-70">No. {String(flying.n).padStart(2, "0")}</p>
+                  <p className="mt-2 font-serif text-3xl sm:text-5xl">{scene.caption}</p>
+                </motion.div>
+              </motion.div>
+            );
+          })()}
       </AnimatePresence>
     </div>
   );

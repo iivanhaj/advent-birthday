@@ -56,7 +56,7 @@ export default async function DoorPage({ params, searchParams }: Params) {
   if (!isDoorReachable(n)) return <SealedDoor n={n} dateLabel={label} backLink={back} />;
 
   const preview = (await searchParams).preview;
-  const learned = LEARNED[n] ?? ["(fill me in after shipping)"];
+  const learned = LEARNED[n] ?? [];
 
   // Door 1: the greenhouse (a stem inside and a star outside for every push).
   if (n === 1) {
@@ -83,7 +83,7 @@ export default async function DoorPage({ params, searchParams }: Params) {
 
   return (
     <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
-      <DoorPlaceholder n={n} lit={lit} />
+      <DoorPlaceholder n={n} title={DOOR_META[n].title} lit={lit} />
     </DoorFrame>
   );
 }
