@@ -163,7 +163,7 @@ await shot("mochi", "/door/2?preview=mixed", {
 });
 // Door 3: birthday records, with one on the turntable
 await shot("records", "/door/3?theme=dreamy", {
-  h: 1000,
+  h: 1340,
   wait: 8000,
   before: async () => {
     await evaluate(`document.querySelector('button[aria-label^="Sure Thing"]')?.click()`);
