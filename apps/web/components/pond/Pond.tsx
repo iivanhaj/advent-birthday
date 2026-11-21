@@ -266,7 +266,8 @@ export function Pond({ initialPushes, phase }: { initialPushes: PushRow[]; phase
     const c = cv.getContext("2d")!;
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const pr = seeded("pads");
-    const pads = Array.from({ length: PAD_COUNT }, () => ({ x: pr() * size.w, y: pr() * size.h, r: 22 + pr() * 26, a: pr() * 6.28 }));
+    const padScale = Math.min(1.15, Math.max(0.55, size.w / 900)); // lily pads shrink with small ponds
+    const pads = Array.from({ length: PAD_COUNT }, () => ({ x: pr() * size.w, y: pr() * size.h, r: (22 + pr() * 26) * padScale, a: pr() * 6.28 }));
     const lanterns = [0.15, 0.55, 0.82].map((u, i) => ({ x: u * size.w, y: (0.2 + ((i * 0.37) % 0.6)) * size.h, ph: i * 2 }));
     let raf = 0;
     let last = performance.now();

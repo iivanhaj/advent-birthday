@@ -29,6 +29,11 @@ const LEARNED: Record<number, string[]> = {
     "watercolour is many nearly transparent layers of a slightly different deformed polygon, not one soft blob",
     "Spotify's iFrame API reports playback position, which is all a tonearm needs",
   ],
+  4: [
+    "a spatial hash turns 'check every fish' into 'check your 3 × 3 cells', and a test can prove it finds the same neighbours",
+    "water is the wave equation on a grid: next = (four neighbours) / 2 − previous, run in parallel in a shader",
+    "a WebGPU compute shader can compare 100 million pairs a frame if each workgroup shares its tile of fish",
+  ],
 };
 
 export const dynamic = "force-dynamic";
