@@ -13,7 +13,7 @@
 <br/>
 
 [![Live on Vercel](https://img.shields.io/badge/live-Vercel-9E3B4C?style=flat-square&logo=vercel&logoColor=white)](https://advent-birthday-hng9.vercel.app)
-![Doors open](https://img.shields.io/badge/doors_open-4_of_12-9E3B4C?style=flat-square)
+![Doors open](https://img.shields.io/badge/doors_open-5_of_12-9E3B4C?style=flat-square)
 ![Next.js](https://img.shields.io/badge/Next.js_16-000?style=flat-square&logo=nextdotjs)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase_Realtime-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
@@ -228,6 +228,67 @@ watercolour look is dozens of nearly transparent layers of a recursively
 deformed polygon, not one soft blob.
 </details>
 
+## Door 4 · The commit pond
+
+<p align="center"><img src="docs/animations/pond.gif" width="640" alt="A koi pond seen from above: koi in small schools swim over a green pond floor with lily pads; clicks send clean ripple rings across the water; the pond then changes to an ink-and-watercolour look and then a night look with lanterns"></p>
+
+**What you're seeing:** a pond where **every koi is one of my pushes**. Each
+koi's colour patches are the kinds of files that push touched (pink for
+TypeScript, yellow for CSS, mint for SQL, lilac for Markdown), its size is how
+many, and koi from the same day swim together as a school. Clicks send ripples
+across the water and the koi scatter. Then the pond changes look: it follows
+Bangalore's real sky, a sunlit garden by day, ink and watercolour at dusk, and
+lanterns at night. [Visit the pond](https://advent-birthday-hng9.vercel.app/door/4), hover a koi to see its commit,
+and leave it open: the next push drops a new koi in with a splash.
+
+<p align="center"><img src="docs/animations/stress.gif" width="555" alt="Ten thousand small koi in eight colours swirling in schools across a dark green pond, simulated on the GPU"></p>
+
+**The stress test:** the same flocking rules at a scale a CPU can't keep up
+with: 10,000 koi, simulated and drawn entirely on the GPU, with a live
+CPU-versus-GPU comparison of frame rate and pairs compared per frame.
+
+**How it works**
+
+- **Flocking (boids).** Every koi follows three local rules: keep your
+  distance from everyone, swim the way your school swims, and drift toward
+  your school's centre. Schooling emerges from that alone.
+- **A spatial hash** files every koi under a grid cell the size of its sight
+  range, so each one only checks the 3 × 3 cells around it instead of the
+  whole pond. A test proves it finds exactly the same neighbours as checking
+  everyone, with a fraction of the work.
+- **Real water on the GPU.** The surface is a grid solving the wave equation in
+  a WebGL2 shader every frame. Its slope bends the view of the pond floor and
+  its curvature focuses light into caustics. The koi swim in a crisp layer
+  above it, so the water never blurs them; they just leave soft wakes.
+- **WebGPU compute for 10,000 koi.** A WGSL compute shader updates every koi
+  in parallel, and an instanced render pipeline draws them all in one call,
+  reading straight from the same GPU buffer.
+
+<details>
+<summary><b>The interesting bit: a hundred million comparisons a frame</b></summary>
+
+The GPU version doesn't bother with a hash: it compares every koi with every
+other one, 10,000 × 9,999 pairs a frame. The trick is tiling. Each workgroup
+of 256 threads loads 256 koi into fast shared memory, every thread compares its
+own koi against that tile, and they move on together:
+
+```wgsl
+for (var t = 0u; t < tiles; t++) {
+  tile[li] = src[t * 256u + li];      // each thread loads one koi into the shared tile
+  workgroupBarrier();
+  for (var m = 0u; m < 256u; m++) {   // ...then everyone compares against all 256
+    let d = tile[m].pos - me.pos;
+    // separation from everyone, alignment and cohesion within my school
+  }
+  workgroupBarrier();
+}
+```
+
+The water uses the same idea at a smaller scale: one shader invocation per grid
+cell, all at once, `next = (left + right + up + down) / 2 − previous`, with a
+little damping so ripples fade.
+</details>
+
 ---
 
 ## More of the building
@@ -265,7 +326,7 @@ learn.
 | 1 | [The living garden](https://advent-birthday-hng9.vercel.app/door/1) | Supabase Realtime, seeded generative SVG | open |
 | 2 | [Mochi, the coding pet](https://advent-birthday-hng9.vercel.app/door/2) | statecharts, A\* pathfinding, projectile physics | open |
 | 3 | [Birthday records](https://advent-birthday-hng9.vercel.app/door/3) | seeded generative painting, Spotify iFrame API | open |
-| 4 | GPU koi pond | spatial hashing, WebGPU | shuttered |
+| 4 | [The commit pond](https://advent-birthday-hng9.vercel.app/door/4) | boids, spatial hashing, GPU water, WebGPU compute | open |
 | 5 | Recursive flowers | L-systems, Rust → WASM | shuttered |
 | 6 | Cozy room, real sky | caching, edge functions | shuttered |
 | 7 | Firefly music | embeddings, clustering | shuttered |
@@ -321,7 +382,8 @@ flowchart LR
 | | |
 |---|---|
 | **Frontend** | Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Framer Motion · hand-drawn SVG · Canvas 2D |
-| **Behaviour** | XState 5 statecharts · A\* pathfinding · projectile physics · seeded PRNG (mulberry32) |
+| **Behaviour** | XState 5 statecharts · A\* pathfinding · projectile physics · boids with a spatial hash · seeded PRNG (mulberry32) |
+| **GPU** | WebGL2 wave-equation water · WebGPU compute and instanced rendering (WGSL) |
 | **Backend** | Next.js route handlers · Supabase (Postgres, Row Level Security, Realtime) |
 | **Data** | GitHub push webhooks · Open-Meteo weather API · Spotify embed (iFrame API) |
 | **Hosting** | Vercel (deploys on every push to `main`) |
@@ -335,8 +397,10 @@ apps/web/                 the Next.js site
   components/building/    façade, windows, window boxes, constellations, elevator
   components/mochi/       Mochi's drawing, runtime loop, live statechart diagram
   components/records/     record disc, turntable, crate, Spotify player hook
+  components/pond/        GPU water, the pond, looks, the WebGPU stress test
   lib/mochi/              her statechart and world model (A*, jump arcs), with tests
   lib/records/            the seeded record painter and the song list, with tests
+  lib/pond/               flocking, spatial hash and koi-from-pushes, with tests
   lib/                    unlock rules (IST), sky, constellations, file kinds
 packages/garden-ui/       shared design tokens, motion presets, DoorFrame
 scripts/                  README screenshots, animations and the GIF encoder
