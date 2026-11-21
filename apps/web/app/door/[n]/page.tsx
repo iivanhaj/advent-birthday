@@ -9,6 +9,8 @@ import { DoorPlaceholder, SealedDoor } from "./placeholders";
 import { Greenhouse } from "./Greenhouse";
 import { MochiHome } from "./MochiHome";
 import { BirthdayRecords } from "./BirthdayRecords";
+import { CommitPond } from "./CommitPond";
+import { getSky } from "@/lib/sky";
 
 /** Each door's "what I learned" card (written after shipping). */
 const LEARNED: Record<number, string[]> = {
@@ -31,7 +33,7 @@ const LEARNED: Record<number, string[]> = {
 
 export const dynamic = "force-dynamic";
 
-type Params = { params: Promise<{ n: string }>; searchParams: Promise<{ preview?: string }> };
+type Params = { params: Promise<{ n: string }>; searchParams: Promise<{ preview?: string; sky?: string; rain?: string }> };
 
 function parseDoor(raw: string): number | null {
   const n = Number(raw);
@@ -61,7 +63,8 @@ export default async function DoorPage({ params, searchParams }: Params) {
   // gets sent to the browser at all, so there's nothing to peek at.
   if (!isDoorReachable(n)) return <SealedDoor n={n} dateLabel={label} backLink={back} />;
 
-  const preview = (await searchParams).preview;
+  const query = await searchParams;
+  const preview = query.preview;
   const learned = LEARNED[n] ?? [];
 
   // Door 1: the greenhouse (a stem inside and a star outside for every push).
@@ -89,6 +92,16 @@ export default async function DoorPage({ params, searchParams }: Params) {
     return (
       <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
         <BirthdayRecords />
+      </DoorFrame>
+    );
+  }
+
+  // Door 4: the commit pond (its look follows the real sky).
+  if (n === 4) {
+    const [pushes, sky] = await Promise.all([getPushes(preview), getSky({ sky: query.sky, rain: query.rain })]);
+    return (
+      <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
+        <CommitPond initialPushes={pushes} phase={sky.phase} />
       </DoorFrame>
     );
   }

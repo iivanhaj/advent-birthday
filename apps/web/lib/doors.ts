@@ -34,7 +34,7 @@ export const DOOR_META: Record<number, { title: string }> = {
   1: { title: "The living garden" },
   2: { title: "Mochi, the coding pet" },
   3: { title: "Birthday records" },
-  4: { title: "GPU koi pond" },
+  4: { title: "The commit pond" },
   5: { title: "Recursive flowers" },
   6: { title: "Cozy room, real sky" },
   7: { title: "Firefly music" },
