@@ -39,6 +39,22 @@ test("the zoom loops seamlessly: at t = 1 every point of M(world) is where the w
   }
 });
 
+test("diving into any petal k loops seamlessly too", () => {
+  const p = DEFAULT_BLOOM;
+  for (let k = 0; k < p.petals; k++) {
+    const root: Frame = { x: 0, y: 0, size: 1, rot: 0, level: 0 };
+    const c = childFrame(root, k, p);
+    const [mx, my] = selfMap(0, 0, p, k);
+    assert.ok(close(c.x, mx) && close(c.y, my), `child ${k} is M_${k}`);
+    const at0 = cameraAt(0, p, 1200, 760, k);
+    const at1 = cameraAt(1, p, 1200, 760, k);
+    const [ax, ay] = toScreen(at0, 0.4, -0.2);
+    const [qx, qy] = selfMap(0.4, -0.2, p, k);
+    const [bx, by] = toScreen(at1, qx, qy);
+    assert.ok(close(ax, bx, 1e-6) && close(ay, by, 1e-6));
+  }
+});
+
 test("walking returns parents before children, all on screen and big enough", () => {
   const p = DEFAULT_BLOOM;
   const cam = cameraAt(0.37, p, 1200, 760);

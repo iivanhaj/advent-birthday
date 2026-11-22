@@ -10,6 +10,7 @@ import { Greenhouse } from "./Greenhouse";
 import { MochiHome } from "./MochiHome";
 import { BirthdayRecords } from "./BirthdayRecords";
 import { CommitPond } from "./CommitPond";
+import { BloomPage } from "./BloomPage";
 import { getSky } from "@/lib/sky";
 
 /** Each door's "what I learned" card (written after shipping). */
@@ -107,6 +108,16 @@ export default async function DoorPage({ params, searchParams }: Params) {
     return (
       <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
         <CommitPond initialPushes={pushes} phase={sky.phase} />
+      </DoorFrame>
+    );
+  }
+
+  // Door 5: the infinite bloom (ink by day, glass at night).
+  if (n === 5) {
+    const sky = await getSky({ sky: query.sky, rain: query.rain });
+    return (
+      <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
+        <BloomPage phase={sky.phase} />
       </DoorFrame>
     );
   }

@@ -39,23 +39,29 @@ export function childFrame(f: Frame, i: number, p: BloomParams): Frame {
   };
 }
 
-/** The self-similarity map M applied to a point (root frame → first child's frame). */
-export function selfMap(px: number, py: number, p: BloomParams): [number, number] {
-  const c = Math.cos(p.twist) * p.ratio;
-  const s = Math.sin(p.twist) * p.ratio;
-  const dx = Math.cos(UP) * p.dist;
-  const dy = Math.sin(UP) * p.dist;
+/**
+ * The self-similarity map M_k applied to a point: root frame → the frame of
+ * the child in petal k. (M_k is M_0 followed by a turn of k petals about the
+ * root's centre; the camera dives into whichever petal k you pick.)
+ */
+export function selfMap(px: number, py: number, p: BloomParams, k = 0): [number, number] {
+  const turn = (k / p.petals) * Math.PI * 2;
+  const c = Math.cos(p.twist + turn) * p.ratio;
+  const s = Math.sin(p.twist + turn) * p.ratio;
+  const dx = Math.cos(UP + turn) * p.dist;
+  const dy = Math.sin(UP + turn) * p.dist;
   return [dx + c * px - s * py, dy + s * px + c * py];
 }
 
-/** The point M leaves where it is: F = (I − A)⁻¹ · d, for M(p) = A·p + d. */
-export function fixedPoint(p: BloomParams): [number, number] {
-  const a = Math.cos(p.twist) * p.ratio;
-  const b = -Math.sin(p.twist) * p.ratio;
-  const c = Math.sin(p.twist) * p.ratio;
-  const d = Math.cos(p.twist) * p.ratio;
-  const dx = Math.cos(UP) * p.dist;
-  const dy = Math.sin(UP) * p.dist;
+/** The point M_k leaves where it is: F = (I − A)⁻¹ · d, for M(p) = A·p + d. */
+export function fixedPoint(p: BloomParams, k = 0): [number, number] {
+  const turn = (k / p.petals) * Math.PI * 2;
+  const a = Math.cos(p.twist + turn) * p.ratio;
+  const b = -Math.sin(p.twist + turn) * p.ratio;
+  const c = Math.sin(p.twist + turn) * p.ratio;
+  const d = Math.cos(p.twist + turn) * p.ratio;
+  const dx = Math.cos(UP + turn) * p.dist;
+  const dy = Math.sin(UP + turn) * p.dist;
   const det = (1 - a) * (1 - d) - b * c;
   return [((1 - d) * dx + b * dy) / det, (c * dx + (1 - a) * dy) / det];
 }
@@ -67,9 +73,10 @@ export type Camera = { cx: number; cy: number; zoom: number; angle: number; fx: 
  * centre + zoom · Rot(angle) · (p − F). `spin` turns the whole picture (to
  * dive into a different petal; the flower looks the same turned by 2π/N).
  */
-export function cameraAt(t: number, p: BloomParams, width: number, height: number, spin = 0): Camera {
-  const [fx, fy] = fixedPoint(p);
-  return { cx: width / 2, cy: height / 2, zoom: Math.min(width, height) * 0.46 * Math.pow(p.ratio, -t), angle: -t * p.twist + spin, fx, fy };
+export function cameraAt(t: number, p: BloomParams, width: number, height: number, k = 0): Camera {
+  const [fx, fy] = fixedPoint(p, k);
+  const turn = (k / p.petals) * Math.PI * 2;
+  return { cx: width / 2, cy: height / 2, zoom: Math.min(width, height) * 0.46 * Math.pow(p.ratio, -t), angle: -t * (p.twist + turn), fx, fy };
 }
 
 export function toScreen(cam: Camera, px: number, py: number): [number, number] {
@@ -85,17 +92,18 @@ export function toScreen(cam: Camera, px: number, py: number): [number, number] 
  * root (so the screen is always covered by an ancestor's petals, never empty
  * paper), already transformed by the camera.
  */
-export function startFrame(cam: Camera, p: BloomParams, up = 3): Frame {
-  // walk up: parent = M⁻¹(child frame)
+export function startFrame(cam: Camera, p: BloomParams, up = 3, k = 0): Frame {
+  // walk up: parent = M_k⁻¹(child frame)
+  const turn = (k / p.petals) * Math.PI * 2;
   let x = 0, y = 0, size = 1, rot = 0;
-  const c = Math.cos(-p.twist), s = Math.sin(-p.twist);
-  const dx = Math.cos(UP) * p.dist, dy = Math.sin(UP) * p.dist;
-  for (let k = 0; k < up; k++) {
+  const c = Math.cos(-(p.twist + turn)), s = Math.sin(-(p.twist + turn));
+  const dx = Math.cos(UP + turn) * p.dist, dy = Math.sin(UP + turn) * p.dist;
+  for (let j = 0; j < up; j++) {
     const px = x - dx, py = y - dy;
     x = (c * px - s * py) / p.ratio;
     y = (s * px + c * py) / p.ratio;
     size /= p.ratio;
-    rot -= p.twist;
+    rot -= p.twist + turn;
   }
   const [sx, sy] = toScreen(cam, x, y);
   return { x: sx, y: sy, size: size * cam.zoom, rot: rot + cam.angle, level: -up };
