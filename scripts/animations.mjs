@@ -291,6 +291,28 @@ await cast("stress", {
   },
 });
 
+// 6. The infinite bloom: zooming in, ink, then glass.
+await cast("bloom", {
+  path: "/door/5?sky=day",
+  w: 1280,
+  h: 900,
+  seconds: 9,
+  scale: 0.55,
+  minFrameMs: 70,
+  setup: async () => {
+    await js(`(() => { const s = document.querySelector('section[aria-label="The bloom"]'); scrollTo(0, s.getBoundingClientRect().top + scrollY - 10); const c = document.querySelector('canvas[role=img]'); for (let i = 0; i < 4; i++) c.dispatchEvent(new WheelEvent('wheel', { deltaY: -100, bubbles: true })); })()`);
+    await sleep(600);
+  },
+  clip: async () => {
+    const r = await rect('canvas[role=img]');
+    return { x: r.x, y: r.y, width: r.w, height: r.h };
+  },
+  script: async () => {
+    await sleep(5000);
+    await js(`[...document.querySelectorAll('button')].find(b => b.textContent === 'Glass at night')?.click()`);
+  },
+});
+
 ws.close();
 chrome.kill();
 console.log(`Saved to ${OUT}`);

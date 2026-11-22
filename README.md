@@ -13,7 +13,7 @@
 <br/>
 
 [![Live on Vercel](https://img.shields.io/badge/live-Vercel-9E3B4C?style=flat-square&logo=vercel&logoColor=white)](https://advent-birthday-hng9.vercel.app)
-![Doors open](https://img.shields.io/badge/doors_open-5_of_12-9E3B4C?style=flat-square)
+![Doors open](https://img.shields.io/badge/doors_open-6_of_12-9E3B4C?style=flat-square)
 ![Next.js](https://img.shields.io/badge/Next.js_16-000?style=flat-square&logo=nextdotjs)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase_Realtime-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
@@ -289,6 +289,58 @@ cell, all at once, `next = (left + right + up + down) / 2 − previous`, with a
 little damping so ripples fade.
 </details>
 
+## Door 5 · The infinite bloom
+
+<p align="center"><img src="docs/animations/bloom.gif" width="609" alt="A fine-line flower whose petals each hold a smaller copy of the whole flower; the camera zooms in continuously, then the drawing switches to glowing glass petals on a night background"></p>
+
+**What you're seeing:** a flower whose every petal holds a smaller copy of the
+whole flower, so you can zoom in forever and it never runs out. The camera
+spirals into one petal until the small flower there becomes the big one, and
+keeps going. It's drawn in fine ink by day and in glowing glass at night (it
+follows the real sky, or you pick). [Open the bloom](https://advent-birthday-hng9.vercel.app/door/5), click any
+petal to dive into that one instead, scroll to speed up or zoom back out, and
+change the petals, nesting and twist to grow a different infinite flower. The
+link remembers your flower.
+
+**How it works**
+
+- **Self-similarity.** Stepping from a flower into its petal is one fixed
+  transformation M (shrink, turn, shift). The camera follows M^t, a smooth
+  "fraction" of that step, spiralling around the one point M leaves in place.
+  At t = 1 the picture is exactly the one at t = 0, so t wraps back and the
+  zoom is seamless forever. Wrapping also keeps every number small, so there's
+  no floating-point "deep zoom" limit.
+- **Only what you can see.** Each frame walks the infinite tree from a few
+  levels above the screen and skips any flower that's off screen or too small,
+  along with everything nested inside it. Tests prove the zoom loops exactly
+  and that this culling never drops a visible flower.
+- **Drawn on the GPU.** Every flower is one instanced quad; a fragment shader
+  draws its petals as signed distance fields, so a 1 px ink line stays 1 px wide
+  on a flower 4 px or 4,000 px across, and glass petals add light to each other.
+- **Rust and WebAssembly.** The tree walk exists twice, in TypeScript and in
+  Rust compiled to a 30 KB WebAssembly module, and the page races them live. A
+  test loads the real `.wasm` and checks both return exactly the same flowers.
+  At full detail the Rust walk is about 2 to 3 times faster.
+
+<details>
+<summary><b>The interesting bit: a NaN that drew straight lines</b></summary>
+
+The first version drew long straight lines shooting out of every petal tip.
+Each petal's width comes from `pow(sin(π · u), 0.75)`, and past the tip `u`
+is 1, but `sin(π)` in floating point is a hair below zero, and a negative
+number to a fractional power is NaN. The NaN slipped through the outline test
+along a line. The fix is one `max`:
+
+```glsl
+// past the tip sin(π) comes out a hair below zero, and pow() of a negative is NaN
+float halfW = W * L * pow(max(sin(PI * u), 0.0), 0.75) * (1.0 - 0.28 * u);
+```
+
+The Rust side needs no wasm-bindgen: it exports two plain functions,
+`alloc_out` and `walk`, and the page reads the flowers straight out of the
+module's memory as a `Float32Array`, then hands that same array to the GPU.
+</details>
+
 ---
 
 ## More of the building
@@ -327,7 +379,7 @@ learn.
 | 2 | [Mochi, the coding pet](https://advent-birthday-hng9.vercel.app/door/2) | statecharts, A\* pathfinding, projectile physics | open |
 | 3 | [Birthday records](https://advent-birthday-hng9.vercel.app/door/3) | seeded generative painting, Spotify iFrame API | open |
 | 4 | [The commit pond](https://advent-birthday-hng9.vercel.app/door/4) | boids, spatial hashing, GPU water, WebGPU compute | open |
-| 5 | Recursive flowers | L-systems, Rust → WASM | shuttered |
+| 5 | [The infinite bloom](https://advent-birthday-hng9.vercel.app/door/5) | self-similarity, SDF shaders, Rust → WebAssembly | open |
 | 6 | Cozy room, real sky | caching, edge functions | shuttered |
 | 7 | Firefly music | embeddings, clustering | shuttered |
 | 8 | Holographic card | sensor APIs, OG images | shuttered |
@@ -383,7 +435,8 @@ flowchart LR
 |---|---|
 | **Frontend** | Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Framer Motion · hand-drawn SVG · Canvas 2D |
 | **Behaviour** | XState 5 statecharts · A\* pathfinding · projectile physics · boids with a spatial hash · seeded PRNG (mulberry32) |
-| **GPU** | WebGL2 wave-equation water · WebGPU compute and instanced rendering (WGSL) |
+| **GPU** | WebGL2 wave-equation water · signed-distance-field shaders · WebGPU compute and instanced rendering (WGSL) |
+| **Rust** | a tiny Rust crate compiled to WebAssembly (no wasm-bindgen), raced against TypeScript |
 | **Backend** | Next.js route handlers · Supabase (Postgres, Row Level Security, Realtime) |
 | **Data** | GitHub push webhooks · Open-Meteo weather API · Spotify embed (iFrame API) |
 | **Hosting** | Vercel (deploys on every push to `main`) |
@@ -398,9 +451,12 @@ apps/web/                 the Next.js site
   components/mochi/       Mochi's drawing, runtime loop, live statechart diagram
   components/records/     record disc, turntable, crate, Spotify player hook
   components/pond/        GPU water, the pond, looks, the WebGPU stress test
+  components/bloom/       the infinite bloom: SDF renderer and page
   lib/mochi/              her statechart and world model (A*, jump arcs), with tests
   lib/records/            the seeded record painter and the song list, with tests
   lib/pond/               flocking, spatial hash and koi-from-pushes, with tests
+  lib/bloom/              self-similarity maths and the tree walk, with tests
+wasm/bloom/               the same tree walk in Rust (pnpm build:wasm)
   lib/                    unlock rules (IST), sky, constellations, file kinds
 packages/garden-ui/       shared design tokens, motion presets, DoorFrame
 scripts/                  README screenshots, animations and the GIF encoder
@@ -417,6 +473,7 @@ pnpm install
 cp apps/web/.env.example apps/web/.env.local   # set DEV_UNLOCK_ALL=true
 pnpm dev                                       # http://localhost:3000/?preview=mixed
 pnpm --filter web test                         # unit tests
+pnpm build:wasm                                # rebuild door 5's Rust engine (needs Rust + wasm32 target)
 pnpm screenshots && pnpm animations            # README images, with the dev server running
 ```
 
