@@ -35,6 +35,11 @@ const LEARNED: Record<number, string[]> = {
     "water is the wave equation on a grid: next = (four neighbours) / 2 − previous, run in parallel in a shader",
     "a WebGPU compute shader can compare 100 million pairs a frame if each workgroup shares its tile of fish",
   ],
+  5: [
+    "a self-similar picture can zoom forever: follow M^t around its fixed point and wrap t from 1 back to 0",
+    "drawing shapes as signed distance fields keeps a 1 px ink line 1 px wide at every size",
+    "pow() of a number a hair below zero is NaN, and a NaN in a shader draws straight lines out of nowhere",
+  ],
 };
 
 export const dynamic = "force-dynamic";
