@@ -75,3 +75,28 @@ test("culling never drops a visible flower (vs. a brute-force walk with no culli
   }
   assert.equal(onScreenCentres, brute);
 });
+
+test("the Rust/WASM walker returns the same flowers as the TypeScript one", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const bytes = await readFile(new URL("../../public/bloom.wasm", import.meta.url));
+  const { instance } = await WebAssembly.instantiate(bytes);
+  const wasm = instance.exports as unknown as {
+    memory: WebAssembly.Memory;
+    alloc_out(max: number): number;
+    walk(...args: number[]): number;
+  };
+  const MAX = 50_000;
+  const ptr = wasm.alloc_out(MAX);
+  for (const p of PARAMS) {
+    for (const t of [0, 0.31, 0.77]) {
+      const cam = cameraAt(t, p, 1200, 760);
+      const s = startFrame(cam, p);
+      const js = new Float32Array(MAX * FLOATS_PER_FLOWER);
+      const nJs = walk(s, p, 1200, 760, 4, js);
+      const nWasm = wasm.walk(ptr, MAX, p.petals, p.ratio, p.dist, p.twist, s.x, s.y, s.size, s.rot, s.level, 1200, 760, 4);
+      assert.equal(nWasm, nJs, `same number of flowers (t=${t})`);
+      const rs = new Float32Array(wasm.memory.buffer, ptr, nWasm * FLOATS_PER_FLOWER);
+      for (let i = 0; i < nJs * FLOATS_PER_FLOWER; i++) assert.ok(Math.abs(rs[i] - js[i]) < 0.01 + Math.abs(js[i]) * 1e-5, `value ${i}: ${rs[i]} vs ${js[i]}`);
+    }
+  }
+});
