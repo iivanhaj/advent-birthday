@@ -283,3 +283,56 @@ html {
     animation: none;
   }
 }
+
+/* ---- door 6 · the photo booth ---- */
+.booth-bulb {
+  animation: booth-bulb 1.5s steps(1, end) infinite;
+}
+@keyframes booth-bulb {
+  0% { fill-opacity: 0.8; }
+  66.6% { fill-opacity: 0; }
+}
+.booth-curtain {
+  transform-box: view-box;
+  animation: booth-curtain 6s ease-in-out infinite;
+}
+@keyframes booth-curtain {
+  50% { transform: skewX(-0.9deg); }
+}
+.booth-feed {
+  animation: booth-feed 7s ease-in-out infinite;
+}
+@keyframes booth-feed {
+  0%, 12% { transform: translateY(-124px); }
+  70%, 100% { transform: translateY(0); }
+}
+.booth-twinkle {
+  animation: booth-twinkle 3s ease-in-out infinite;
+}
+@keyframes booth-twinkle {
+  50% { opacity: 0.25; }
+}
+.booth-rain {
+  animation: booth-rain 0.6s linear infinite;
+}
+@keyframes booth-rain {
+  to { stroke-dashoffset: -60; }
+}
+.booth-spin {
+  transform-box: view-box;
+  animation: booth-spin 40s linear infinite;
+}
+@keyframes booth-spin {
+  to { transform: rotate(360deg); }
+}
+.booth-develop {
+  animation: booth-develop 4.5s ease-out both;
+}
+@keyframes booth-develop {
+  from { filter: blur(3px) brightness(1.4); opacity: 0.15; }
+  35% { opacity: 1; }
+  to { filter: none; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .booth-bulb, .booth-curtain, .booth-feed, .booth-twinkle, .booth-rain, .booth-spin, .booth-develop { animation: none; }
+}

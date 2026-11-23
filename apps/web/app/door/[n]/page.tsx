@@ -11,7 +11,9 @@ import { MochiHome } from "./MochiHome";
 import { BirthdayRecords } from "./BirthdayRecords";
 import { CommitPond } from "./CommitPond";
 import { BloomPage } from "./BloomPage";
+import { BoothPage } from "./BoothPage";
 import { getSky } from "@/lib/sky";
+import { boothSky } from "@/lib/booth/strip";
 
 /** Each door's "what I learned" card (written after shipping). */
 const LEARNED: Record<number, string[]> = {
@@ -39,6 +41,11 @@ const LEARNED: Record<number, string[]> = {
     "a self-similar picture can zoom forever: follow M^t around its fixed point and wrap t from 1 back to 0",
     "drawing shapes as signed distance fields keeps a 1 px ink line 1 px wide at every size",
     "pow() of a number a hair below zero is NaN, and a NaN in a shader draws straight lines out of nowhere",
+  ],
+  6: [
+    "the Sobel operator is two 3 × 3 kernels; where brightness changes fast, draw ink: that's most of what a line drawing is",
+    "2 × 6 inches at 300 dpi is exactly 600 × 1800 pixels, so the canvas is the print and CSS @page sets the paper size",
+    "rate-limit by a keyed hash of the IP: it tells visitors apart without ever storing an address",
   ],
 };
 
@@ -123,6 +130,16 @@ export default async function DoorPage({ params, searchParams }: Params) {
     return (
       <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
         <BloomPage phase={sky.phase} />
+      </DoorFrame>
+    );
+  }
+
+  // Door 6: the photo booth (its window shows the real sky).
+  if (n === 6) {
+    const sky = await getSky({ sky: query.sky, rain: query.rain });
+    return (
+      <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
+        <BoothPage sky={boothSky(sky.phase, sky.raining)} tempC={sky.tempC} />
       </DoorFrame>
     );
   }
