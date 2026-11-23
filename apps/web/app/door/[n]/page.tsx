@@ -43,7 +43,7 @@ const LEARNED: Record<number, string[]> = {
     "pow() of a number a hair below zero is NaN, and a NaN in a shader draws straight lines out of nowhere",
   ],
   6: [
-    "the Sobel operator is two 3 × 3 kernels; where brightness changes fast, draw ink: that's most of what a line drawing is",
+    "the top level of a texture's mipmap chain is the whole image's average colour, so auto-exposure is one texture lookup",
     "2 × 6 inches at 300 dpi is exactly 600 × 1800 pixels, so the canvas is the print and CSS @page sets the paper size",
     "rate-limit by a keyed hash of the IP: it tells visitors apart without ever storing an address",
   ],

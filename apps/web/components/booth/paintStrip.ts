@@ -6,8 +6,9 @@ import { STRIP, photoSlots, type FrameId, type Rect, type Stamp, type StampId } 
  * same fine rose line as the rest of the site, with only faint colour.
  */
 
-const ink = `rgb(${INK.join(",")})`;
-const paper = `rgb(${PAPER.join(",")})`;
+const toCss = (c: number[]) => `rgb(${c.map((v) => Math.round(v * 255)).join(",")})`;
+const ink = toCss(INK);
+const paper = toCss(PAPER);
 export const WASH = { blush: "rgba(229,143,168,.22)", gold: "rgba(242,196,90,.6)", goldSoft: "rgba(242,196,90,.25)", butter: "rgba(251,227,176,.45)", sage: "rgba(141,191,106,.3)" };
 
 /** The site's fonts are self-hosted by next/font under generated names; read them off the page. */
@@ -70,9 +71,13 @@ function vine(c: CanvasRenderingContext2D, s: Rect) {
   }
 }
 
-/** The strip without stamps. Shots are 4:3 canvases already developed with a film. */
-export function paintStrip(shots: CanvasImageSource[], frame: FrameId, caption: string, seed: number): HTMLCanvasElement {
-  const S = document.createElement("canvas");
+/**
+ * The strip without stamps. Shots are 4:3 canvases already developed with a
+ * film (a missing one leaves its window empty). Paints into `into` if given,
+ * which is how the live preview repaints the same canvas.
+ */
+export function paintStrip(shots: (CanvasImageSource | undefined)[], frame: FrameId, caption: string, seed: number, into?: HTMLCanvasElement): HTMLCanvasElement {
+  const S = into ?? document.createElement("canvas");
   S.width = STRIP.w;
   S.height = STRIP.h;
   const c = S.getContext("2d")!;

@@ -1,55 +1,69 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { INK, PAPER, develop, inkAmount, sobel, luma } from "./film.ts";
+import { CLASSIC, EXPOSURE, FILMS, INK, PAPER, blur, develop, exposureGain, gaussian, shade } from "./film.ts";
 import { POSES, STRIP, STAMP_RADIUS, boothSky, caption, photoSlots, pressOrLift, stripFileName, type Stamp } from "./strip.ts";
 import { NOTE_MAX, RATE, checkNote, mayPost, mergeNotes, tidy } from "./guestbook.ts";
 
-/** A w × h RGBA image, black on the left half and white on the right. */
-function halves(w: number, h: number): Uint8ClampedArray {
+const to255 = (c: number[]) => c.map((v) => Math.round(v * 255));
+const near = (a: number[], b: number[], tol: number) => a.every((v, i) => Math.abs(v - b[i]) <= tol);
+const gray = (w: number, h: number, v: number) => {
   const px = new Uint8ClampedArray(w * h * 4);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) px.fill(x < w / 2 ? 0 : 255, (y * w + x) * 4, (y * w + x) * 4 + 3), (px[(y * w + x) * 4 + 3] = 255);
+  for (let i = 0; i < w * h; i++) px.set([v, v, v, 255], i * 4);
   return px;
-}
-const at = (px: Uint8ClampedArray, w: number, x: number, y: number) => Array.from(px.slice((y * w + x) * 4, (y * w + x) * 4 + 3));
+};
 
-test("sobel finds a vertical edge and nothing on flat ground", () => {
-  const w = 8, h = 6, img = halves(w, h);
-  const lum = new Float32Array(w * h);
-  for (let i = 0; i < w * h; i++) lum[i] = luma(img[i * 4], img[i * 4 + 1], img[i * 4 + 2]);
-  assert.equal(sobel(lum, w, h, 1, 2), 0); // all black around it
-  assert.equal(sobel(lum, w, h, 6, 2), 0); // all white around it
-  assert.ok(sobel(lum, w, h, 3, 2) > 500); // right beside the edge: 4 × 255 × ~0.99
-  assert.equal(sobel(lum, w, h, 0, 2), 0); // the border is left as paper
+test("a Gaussian kernel sums to 1, and blurring a flat image changes nothing", () => {
+  for (const s of [0.5, 1, 1.6, 4]) assert.ok(Math.abs(gaussian(s).reduce((a, b) => a + b, 0) - 1) < 1e-9);
+  const flat = new Float32Array(30 * 20).fill(0.4);
+  for (const v of blur(flat, 30, 20, 2)) assert.ok(Math.abs(v - 0.4) < 1e-6);
 });
 
-test("fine-line ink draws the edge in ink and leaves the rest as paper", () => {
-  const w = 8, h = 6;
-  const out = develop(halves(w, h), w, h, "ink");
-  assert.deepEqual(at(out, w, 1, 2), PAPER);
-  assert.deepEqual(at(out, w, 6, 2), PAPER);
-  assert.deepEqual(at(out, w, 3, 2), INK);
-  assert.deepEqual(at(out, w, 4, 2), INK);
+test("exposure lifts a dim frame and calms a bright one, within limits", () => {
+  assert.equal(exposureGain(EXPOSURE.target), 1);
+  assert.ok(exposureGain(0.3) > 1);
+  assert.ok(exposureGain(0.8) < 1);
+  assert.equal(exposureGain(0.01), EXPOSURE.max);
+  assert.equal(exposureGain(1), EXPOSURE.min);
+});
+
+test("a dim room and a bright one print alike", () => {
+  const dim = develop(gray(16, 12, 60), 16, 12, "rose");
+  const bright = develop(gray(16, 12, 130), 16, 12, "rose");
+  assert.ok(near(Array.from(dim.slice(0, 3)), Array.from(bright.slice(0, 3)), 3));
+});
+
+test("rose print: highlights are bare paper, shadows solid rose ink", () => {
+  for (const [x, y] of [[10, 10], [300, 200], [639, 479]]) {
+    assert.deepEqual(to255(shade("rose", 1, x, y)), to255(PAPER));
+    assert.deepEqual(to255(shade("rose", 0, x, y)), to255(INK));
+  }
+  // darker always means more ink (on the green channel, ink is far darker than paper)
+  assert.ok(shade("rose", 0.3, 5, 5)[1] < shade("rose", 0.6, 5, 5)[1]);
+});
+
+test("classic booth is black and white, with darker corners", () => {
+  for (const v of [0.2, 0.5, 0.8]) {
+    const [r, g, b] = shade("classic", v, 320, 240);
+    assert.ok(r >= g && g >= b && r - b < 0.07, "a warm neutral, no colour cast");
+  }
+  // same brightness, centre versus corner (averaged over a patch, so grain cancels out)
+  const patch = (x0: number, y0: number) => {
+    let s = 0;
+    for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) s += shade("classic", 0.7, x0 + x, y0 + y)[1];
+    return s / 64;
+  };
+  assert.ok(patch(316, 236) - patch(0, 0) > CLASSIC.vignette * 0.3);
+});
+
+test("both films keep their colours in range, for any brightness", () => {
+  for (const { id } of FILMS)
+    for (let i = 0; i <= 100; i++) for (const c of shade(id, i / 100, (i * 37) % 640, (i * 53) % 480)) assert.ok(c >= 0 && c <= 1, `${id} gave ${c}`);
+});
+
+test("the CPU darkroom returns an opaque image of the same size", () => {
+  const out = develop(gray(20, 10, 128), 20, 10, "classic", 2);
+  assert.equal(out.length, 20 * 10 * 4);
   for (let i = 3; i < out.length; i += 4) assert.equal(out[i], 255);
-});
-
-test("the hint of colour keeps a little of the photo under the ink", () => {
-  const w = 4, h = 4, red = new Uint8ClampedArray(w * h * 4);
-  for (let i = 0; i < w * h; i++) red.set([255, 0, 0, 255], i * 4);
-  const out = develop(red, w, h, "tint");
-  // flat red, no edges: 80% paper + 20% red
-  assert.deepEqual(at(out, w, 1, 1), [Math.round(PAPER[0] * 0.8 + 51), Math.round(PAPER[1] * 0.8), Math.round(PAPER[2] * 0.8)]);
-});
-
-test("the rose print is bare paper in the highlights and solid ink in the shadows", () => {
-  assert.equal(inkAmount("rose", 0, 255, 0, 0), 0);
-  assert.equal(inkAmount("rose", 0, 0, 0, 0), 1);
-  assert.ok(inkAmount("rose", 0, 100, 0, 0) > inkAmount("rose", 0, 180, 0, 0));
-});
-
-test("pencil hatches only the shadows, on diagonals", () => {
-  assert.equal(inkAmount("pencil", 0, 50, 5, 0), 0.35);
-  assert.equal(inkAmount("pencil", 0, 50, 5, 1), 0);
-  assert.equal(inkAmount("pencil", 0, 200, 5, 0), 0);
 });
 
 test("the strip is exactly 2 × 6 inches at 300 dpi, with four 4:3 photos that fit and don't overlap", () => {

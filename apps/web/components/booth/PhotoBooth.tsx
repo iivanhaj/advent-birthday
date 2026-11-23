@@ -68,10 +68,10 @@ function Curtains() {
 export function PhotoBooth({ sky, tempC }: { sky: BoothSky; tempC: number | null }) {
   const compact = useCompact();
   const [stage, setStage] = useState<Stage>("room");
-  const [film, setFilm] = useState<FilmId>("ink");
+  const [film, setFilm] = useState<FilmId>("rose");
   const [frame, setFrame] = useState<FrameId>("line");
   const [feed, setFeed] = useState<Feed>({ kind: "sitter" });
-  const [feedNote, setFeedNote] = useState("A stand-in sitter. Use your camera or a photo.");
+  const [feedNote, setFeedNote] = useState("a stand-in sitter");
   const [count, setCount] = useState("");
   const [flash, setFlash] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -84,9 +84,22 @@ export function PhotoBooth({ sky, tempC }: { sky: BoothSky; tempC: number | null
   const view = useRef<HTMLCanvasElement>(null);
   const out = useRef<HTMLCanvasElement>(null);
   const darkroom = useRef<Darkroom | null>(null);
-  const live = useRef({ film, feed });
-  live.current = { film, feed };
+  const preview = useRef<HTMLCanvasElement>(null);
+  const taken = useRef<HTMLCanvasElement[]>([]);
+  const live = useRef({ film, feed, frame, sky, tempC });
+  live.current = { film, feed, frame, sky, tempC };
   const sitter = useRef<HTMLCanvasElement | null>(null);
+
+  // development only: ?testphoto=<cors image url> loads a portrait to tune the films on
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") return;
+    const url = new URLSearchParams(location.search).get("testphoto");
+    if (!url) return;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => setFeed({ kind: "photo", img });
+    img.src = url;
+  }, []);
 
   // stop the camera whenever the feed changes or the booth goes away
   useEffect(() => {
@@ -104,14 +117,22 @@ export function PhotoBooth({ sky, tempC }: { sky: BoothSky; tempC: number | null
       sitter.current.height = VIEW.h;
     }
     let raf = 0;
+    let painted = 0;
     const tick = (t: number) => {
-      const { film, feed } = live.current;
+      const { film, feed, frame, sky, tempC } = live.current;
       const room = darkroom.current!;
       if (feed.kind === "camera" && feed.video.readyState >= 2) room.draw(feed.video, film, true);
       else if (feed.kind === "photo") room.draw(feed.img, film, false);
       else {
         paintSitter(sitter.current!.getContext("2d")!, t);
         room.draw(sitter.current!, film, false);
+      }
+      // the strip beside the viewfinder, a few times a second: poses taken so far, then the live view
+      // in every window still to come, inside the chosen frame
+      if (preview.current && view.current && t - painted > 160) {
+        painted = t;
+        const slots = Array.from({ length: POSES }, (_, i) => taken.current[i] ?? view.current!);
+        paintStrip(slots, frame, caption(new Date(), sky, tempC), 1128, preview.current);
       }
       raf = requestAnimationFrame(tick);
     };
@@ -133,9 +154,9 @@ export function PhotoBooth({ sky, tempC }: { sky: BoothSky; tempC: number | null
       video.playsInline = true;
       await video.play();
       setFeed({ kind: "camera", video, stream });
-      setFeedNote("Your camera. Nothing leaves this page.");
+      setFeedNote("your camera, never uploaded");
     } catch {
-      setFeedNote("The camera is blocked or missing. Try a photo instead.");
+      setFeedNote("no camera here: try a photo");
     }
   }
 
@@ -144,7 +165,7 @@ export function PhotoBooth({ sky, tempC }: { sky: BoothSky; tempC: number | null
     const img = new Image();
     img.onload = () => {
       setFeed({ kind: "photo", img });
-      setFeedNote("Your photo. Nothing leaves this page.");
+      setFeedNote("your photo, never uploaded");
     };
     img.src = URL.createObjectURL(file);
   }
@@ -153,6 +174,7 @@ export function PhotoBooth({ sky, tempC }: { sky: BoothSky; tempC: number | null
     if (busy || !view.current) return;
     setBusy(true);
     const shots: HTMLCanvasElement[] = [];
+    taken.current = shots;
     for (let k = 0; k < POSES; k++) {
       setShotsTaken(k);
       for (const n of ["three", "two", "one"]) {
@@ -171,12 +193,15 @@ export function PhotoBooth({ sky, tempC }: { sky: BoothSky; tempC: number | null
       await sleep(420);
     }
     setShotsTaken(POSES);
+    taken.current = [];
     const at = new Date();
-    setStrip({ base: paintStrip(shots, frame, caption(at, sky, tempC), at.getTime() | 0), at, id: at.getTime() });
+    // read the frame and sky as they are now, not as they were when the countdown began
+    const now = live.current;
+    setStrip({ base: paintStrip(shots, now.frame, caption(at, now.sky, now.tempC), at.getTime() | 0), at, id: at.getTime() });
     setStamps([]);
     setStage("developing");
     setBusy(false);
-  }, [busy, frame, sky, tempC]);
+  }, [busy]);
 
   function press(e: React.PointerEvent<HTMLCanvasElement>) {
     const b = e.currentTarget.getBoundingClientRect();
@@ -221,7 +246,7 @@ export function PhotoBooth({ sky, tempC }: { sky: BoothSky; tempC: number | null
     setCount("");
     // turn the camera off whenever you step out
     setFeed({ kind: "sitter" });
-    setFeedNote("A stand-in sitter. Use your camera or a photo.");
+    setFeedNote("a stand-in sitter");
   }
 
   return (
@@ -238,19 +263,26 @@ export function PhotoBooth({ sky, tempC }: { sky: BoothSky; tempC: number | null
       )}
 
       {stage === "inside" && (
-        <div className="relative px-4 pt-6 pb-6 sm:aspect-[3/2] sm:px-[22%] sm:pt-[3.5%] sm:pb-0">
+        <div className="relative px-4 pt-6 pb-6 sm:aspect-[3/2] sm:px-[17%] sm:pt-[3.5%] sm:pb-0">
           <Curtains />
-          <div className="relative border-[1.5px] border-line bg-paper p-2">
-            <div className="relative overflow-hidden border border-line/50">
-              <canvas ref={view} className="block aspect-[4/3] h-auto w-full" aria-label="The viewfinder, developed live in ink" />
-              {count && (
-                <div aria-live="assertive" className="pointer-events-none absolute inset-0 grid place-items-center font-serif text-6xl italic [text-shadow:0_0_14px_#fbf1ee,0_0_4px_#fbf1ee] sm:text-8xl">
-                  {count}
-                </div>
-              )}
-              <div className={`pointer-events-none absolute inset-0 bg-white transition-opacity ${flash ? "opacity-90 duration-0" : "opacity-0 duration-500"}`} />
-              <p className="absolute bottom-2 left-2 bg-paper/90 px-1.5 font-serif text-[11px] italic">{busy ? `pose ${shotsTaken + 1} of ${POSES}` : feedNote}</p>
+          <div className="relative flex items-start gap-3 sm:gap-5">
+            <div className="relative min-w-0 flex-1 border-[1.5px] border-line bg-paper p-2">
+              <div className="relative overflow-hidden border border-line/50">
+                <canvas ref={view} className="block aspect-[4/3] h-auto w-full" aria-label="The viewfinder, developed live" />
+                {count && (
+                  <div aria-live="assertive" className="pointer-events-none absolute inset-0 grid place-items-center font-serif text-6xl italic [text-shadow:0_0_14px_#fbf1ee,0_0_4px_#fbf1ee] sm:text-8xl">
+                    {count}
+                  </div>
+                )}
+                <div className={`pointer-events-none absolute inset-0 bg-white transition-opacity ${flash ? "opacity-90 duration-0" : "opacity-0 duration-500"}`} />
+                <p className="absolute bottom-2 left-2 bg-paper/90 px-1.5 font-serif text-[11px] italic">{busy ? `pose ${shotsTaken + 1} of ${POSES}` : feedNote}</p>
+              </div>
             </div>
+            {/* the strip as it will print: your poses so far, the live view in the windows still to fill, in the chosen frame */}
+            <figure className="w-[22%] shrink-0 sm:w-[19%]">
+              <canvas ref={preview} width={600} height={1800} className="block aspect-[1/3] h-auto w-full border border-line/50 shadow-[3px_3px_0_rgba(158,59,76,0.12)]" aria-label="A preview of your strip in the chosen frame" />
+              <figcaption className="mt-1.5 text-center font-serif text-[11px] italic opacity-70">your strip</figcaption>
+            </figure>
           </div>
           <div className="relative mt-5 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex flex-col gap-3">

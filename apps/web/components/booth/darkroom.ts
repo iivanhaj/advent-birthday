@@ -1,67 +1,99 @@
-import { EDGE, GRAPHITE, INK, PAPER, TINT, develop, type FilmId } from "@/lib/booth/film";
+import { CLASSIC, EXPOSURE, INK, PAPER, ROSE, SIGMA, SILVER_DARK, SILVER_LIGHT, develop, type FilmId } from "@/lib/booth/film";
 
 /**
  * The booth's viewfinder: the camera developed live, every frame, on the GPU.
  *
- * The camera frame is uploaded as a texture and one fragment shader runs per
- * output pixel. For the ink films it reads the 3 × 3 neighbourhood, takes the
- * Sobel gradient of brightness and turns strong edges into rose ink: the same
- * maths as lib/booth/film.ts, which the tests check. A 640 × 480 frame is
- * 307,200 pixels × 9 texture reads, done in well under a millisecond.
+ * Three fragment-shader passes over a 640 × 480 frame:
  *
- * Without WebGL2 it falls back to that TypeScript version at a lower size.
+ *   1. across  read the camera (cover-cropped, mirrored for a selfie),
+ *              normalise its exposure by the frame's average brightness (the
+ *              top level of the texture's mipmap chain *is* that average),
+ *              and blur brightness slightly left–right to calm webcam noise;
+ *   2. down    the same blur up–down (a Gaussian is separable, so two 1D
+ *              passes do the work of one 2D pass with far fewer reads);
+ *   3. film    print it: rose ink on cream, or a black-and-white booth print.
+ *
+ * Pass 3 is the same maths as lib/booth/film.ts `shade()`, which the tests
+ * check and which runs on the CPU when there's no WebGL2.
  */
 
 export type Source = HTMLVideoElement | HTMLImageElement | HTMLCanvasElement;
+export const VIEW = { w: 640, h: 480 };
+
+const FILM_INDEX: Record<FilmId, number> = { rose: 0, classic: 1 };
+const v3 = (c: number[]) => `vec3(${c.map((x) => x.toFixed(4)).join(", ")})`;
+const f = (x: number) => x.toFixed(4);
+
+/** Gaussian weights as a GLSL array literal. */
+function kernel(sigma: number) {
+  const r = Math.ceil(sigma * 3);
+  const k = Array.from({ length: 2 * r + 1 }, (_, i) => Math.exp(-((i - r) ** 2) / (2 * sigma * sigma)));
+  const s = k.reduce((a, b) => a + b, 0);
+  return { r, glsl: `float[${k.length}](${k.map((v) => f(v / s)).join(", ")})` };
+}
+const K = kernel(SIGMA);
+const blurLoop = (sample: string) => `float k[${2 * K.r + 1}] = ${K.glsl};
+  float s = 0.0;
+  for (int i = -${K.r}; i <= ${K.r}; i++) s += ${sample} * k[i + ${K.r}];`;
 
 const VS = `#version 300 es
 in vec2 p; out vec2 uv;
 void main() { uv = vec2(p.x * 0.5 + 0.5, 0.5 - p.y * 0.5); gl_Position = vec4(p, 0.0, 1.0); }`;
 
-const v3 = (c: number[]) => `vec3(${c.map((x) => (x / 255).toFixed(4)).join(", ")})`;
-
-const FS = `#version 300 es
+const ACROSS = `#version 300 es
 precision highp float;
 in vec2 uv; out vec4 o;
 uniform sampler2D cam;
-uniform vec2 texel;     // one output pixel, in source uv
-uniform vec4 crop;      // xy = offset, zw = scale: cover-fit the source into 4:3
-uniform float mirror;   // 1 for a selfie camera
-uniform int film;       // 0 ink, 1 tint, 2 pencil, 3 rose
-const vec3 INK = ${v3(INK)};
-const vec3 PAPER = ${v3(PAPER)};
-const vec3 GRAPHITE = ${v3(GRAPHITE)};
-vec2 at(vec2 q) { q.x = mix(q.x, 1.0 - q.x, mirror); return crop.xy + q * crop.zw; }
-float lum(vec2 q) { vec3 c = texture(cam, at(q)).rgb; return dot(c, vec3(0.3, 0.59, 0.11)) * 255.0; }
+uniform vec4 crop;
+uniform float mirror;
+uniform float maxLod;
+vec2 at(vec2 q) { q.x = mix(q.x, 1.0 - q.x, mirror); return crop.xy + clamp(q, 0.0, 1.0) * crop.zw; }
 void main() {
-  vec2 d = texel;
-  float tl = lum(uv + vec2(-d.x, -d.y)), t = lum(uv + vec2(0.0, -d.y)), tr = lum(uv + vec2(d.x, -d.y));
-  float l = lum(uv + vec2(-d.x, 0.0)), r = lum(uv + vec2(d.x, 0.0));
-  float bl = lum(uv + vec2(-d.x, d.y)), b = lum(uv + vec2(0.0, d.y)), br = lum(uv + vec2(d.x, d.y));
-  float gx = -tl - 2.0 * l - bl + tr + 2.0 * r + br;
-  float gy = -tl - 2.0 * t - tr + bl + 2.0 * b + br;
-  float edge = length(vec2(gx, gy));
-  vec3 src = texture(cam, at(uv)).rgb;
-  float y = dot(src, vec3(0.3, 0.59, 0.11)) * 255.0;
-  vec3 paper = PAPER, ink = INK;
-  float a;
-  if (film == 3) {
-    a = clamp((1.0 - y / 255.0 - 0.15) * 1.4, 0.0, 1.0);
-  } else if (film == 2) {
-    ink = GRAPHITE;
-    vec2 px = floor(gl_FragCoord.xy);
-    float hatch = (mod(px.x + px.y, 5.0) < 0.5 && y < 110.0) ? 0.35 : 0.0;
-    a = max(clamp((edge - ${EDGE.pencil.from.toFixed(1)}) / ${EDGE.pencil.span.toFixed(1)}, 0.0, 1.0) * 0.8, hatch);
-  } else {
-    a = clamp((edge - ${EDGE.ink.from.toFixed(1)}) / ${EDGE.ink.span.toFixed(1)}, 0.0, 1.0);
-    if (film == 1) paper = mix(PAPER, src, ${TINT.toFixed(2)});
-  }
-  o = vec4(mix(paper, ink, a), 1.0);
+  float mean = dot(textureLod(cam, vec2(0.5), maxLod).rgb, vec3(0.3, 0.59, 0.11));
+  float gain = clamp(${f(EXPOSURE.target)} / max(mean, 0.001), ${f(EXPOSURE.min)}, ${f(EXPOSURE.max)});
+  vec2 d = vec2(1.0 / ${VIEW.w}.0, 0.0);
+  ${blurLoop("clamp(dot(texture(cam, at(uv + float(i) * d)).rgb, vec3(0.3, 0.59, 0.11)) * gain, 0.0, 1.0)")}
+  o = vec4(s, s, s, 1.0);
 }`;
 
-const FILM_INDEX: Record<FilmId, number> = { ink: 0, tint: 1, pencil: 2, rose: 3 };
+// render targets store rows bottom-up and the camera top-down, so reading one back flips y
+const DOWN = `#version 300 es
+precision highp float;
+in vec2 uv; out vec4 o;
+uniform sampler2D src;
+vec2 flip(vec2 q) { return vec2(q.x, 1.0 - q.y); }
+void main() {
+  vec2 d = vec2(0.0, 1.0 / ${VIEW.h}.0);
+  ${blurLoop("texture(src, flip(uv + float(i) * d)).r")}
+  o = vec4(s, s, s, 1.0);
+}`;
 
-export const VIEW = { w: 640, h: 480 };
+const FILM = `#version 300 es
+precision highp float;
+in vec2 uv; out vec4 o;
+uniform sampler2D blurred;
+uniform int film;
+const vec3 INK = ${v3(INK)};
+const vec3 PAPER = ${v3(PAPER)};
+const vec3 SILVER_DARK = ${v3(SILVER_DARK)};
+const vec3 SILVER_LIGHT = ${v3(SILVER_LIGHT)};
+float grain(vec2 p) { return fract(sin(p.x * 12.9898 + p.y * 78.233) * 43758.5453); }
+void main() {
+  float v = texture(blurred, vec2(uv.x, 1.0 - uv.y)).r;
+  // viewfinder pixel, top-left origin (the CPU version's x, y)
+  vec2 px = vec2(floor(uv.x * ${VIEW.w}.0), floor(uv.y * ${VIEW.h}.0));
+  float n = grain(px) - 0.5;
+  vec3 c;
+  if (film == 0) {
+    float ink = (1.0 - v - ${f(ROSE.lift)}) * ${f(ROSE.slope)};
+    c = mix(PAPER, INK, clamp(ink + n * ${f(ROSE.grain)}, 0.0, 1.0));
+  } else {
+    vec2 q = px / vec2(${VIEW.w}.0, ${VIEW.h}.0) - 0.5;
+    float vignette = 1.0 - ${f(CLASSIC.vignette)} * dot(q, q) * 2.0;
+    c = mix(SILVER_DARK, SILVER_LIGHT, clamp(smoothstep(${f(CLASSIC.black)}, ${f(CLASSIC.white)}, v) * vignette + n * ${f(CLASSIC.grain)}, 0.0, 1.0));
+  }
+  o = vec4(c, 1.0);
+}`;
 
 function sourceSize(s: Source): [number, number] {
   if (s instanceof HTMLVideoElement) return [s.videoWidth, s.videoHeight];
@@ -69,7 +101,7 @@ function sourceSize(s: Source): [number, number] {
   return [s.width, s.height];
 }
 
-/** Cover-fit a w × h source into 4:3: the part of it (in uv) to show. */
+/** Cover-fit a w × h source into 4:3: the part of it (in uv) to show. Wide sources crop the sides evenly. */
 export function coverCrop(w: number, h: number): [number, number, number, number] {
   const want = VIEW.w / VIEW.h;
   const have = w / h;
@@ -77,8 +109,9 @@ export function coverCrop(w: number, h: number): [number, number, number, number
     const sx = want / have;
     return [(1 - sx) / 2, 0, sx, 1];
   }
+  // a tall photo: keep the top part, where the face usually is
   const sy = have / want;
-  return [0, (1 - sy) / 2, 1, sy];
+  return [0, (1 - sy) * 0.22, 1, sy];
 }
 
 export interface Darkroom {
@@ -103,52 +136,99 @@ export function createDarkroom(canvas: HTMLCanvasElement): Darkroom {
 }
 
 function glDarkroom(gl: WebGL2RenderingContext): Darkroom {
-  const make = (type: number, src: string) => {
+  const compile = (type: number, src: string) => {
     const s = gl.createShader(type)!;
     gl.shaderSource(s, src);
     gl.compileShader(s);
     if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s) ?? "shader");
     return s;
   };
-  const prog = gl.createProgram()!;
-  gl.attachShader(prog, make(gl.VERTEX_SHADER, VS));
-  gl.attachShader(prog, make(gl.FRAGMENT_SHADER, FS));
-  gl.linkProgram(prog);
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog) ?? "link");
-  const loc = (n: string) => gl.getUniformLocation(prog, n);
-  const u = { texel: loc("texel"), crop: loc("crop"), mirror: loc("mirror"), film: loc("film") };
+  const vs = compile(gl.VERTEX_SHADER, VS);
+  const program = (fs: string) => {
+    const p = gl.createProgram()!;
+    gl.attachShader(p, vs);
+    gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fs));
+    gl.bindAttribLocation(p, 0, "p");
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p) ?? "link");
+    return p;
+  };
+  const across = program(ACROSS);
+  const down = program(DOWN);
+  const film = program(FILM);
+  const U = (p: WebGLProgram, n: string) => gl.getUniformLocation(p, n);
 
-  const buf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
   const vao = gl.createVertexArray();
   gl.bindVertexArray(vao);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
   gl.enableVertexAttribArray(0);
   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
-  const tex = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, tex);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  // the camera, with a mipmap chain (its top level is the frame's average colour)
+  const cam = gl.createTexture()!;
+  gl.bindTexture(gl.TEXTURE_2D, cam);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
+  // two half-float targets for the blur passes (finer than 8 bits, so shadows don't band)
+  const float = !!gl.getExtension("EXT_color_buffer_float");
+  const target = () => {
+    const t = gl.createTexture()!;
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    if (float) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, VIEW.w, VIEW.h, 0, gl.RGBA, gl.HALF_FLOAT, null);
+    else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, VIEW.w, VIEW.h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    const fb = gl.createFramebuffer()!;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) throw new Error("blur target incomplete");
+    return { t, fb };
+  };
+  const A = target();
+  const B = target();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
   return {
     gpu: true,
-    draw(src, film, mirror) {
+    draw(src, filmId, mirror) {
       const [w, h] = sourceSize(src);
       if (!w || !h) return;
-      gl.viewport(0, 0, VIEW.w, VIEW.h);
-      gl.useProgram(prog);
-      gl.bindVertexArray(vao);
-      gl.bindTexture(gl.TEXTURE_2D, tex);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
       const crop = coverCrop(w, h);
-      gl.uniform4f(u.crop, ...crop);
-      // sample neighbours one *output* pixel apart, so line weight doesn't depend on the camera's resolution
-      gl.uniform2f(u.texel, 1 / VIEW.w, 1 / VIEW.h);
-      gl.uniform1f(u.mirror, mirror ? 1 : 0);
-      gl.uniform1i(u.film, FILM_INDEX[film]);
+      gl.viewport(0, 0, VIEW.w, VIEW.h);
+      gl.bindVertexArray(vao);
+
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, cam);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+      gl.generateMipmap(gl.TEXTURE_2D);
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, A.fb);
+      gl.useProgram(across);
+      gl.uniform1i(U(across, "cam"), 0);
+      gl.uniform4f(U(across, "crop"), ...crop);
+      gl.uniform1f(U(across, "mirror"), mirror ? 1 : 0);
+      gl.uniform1f(U(across, "maxLod"), Math.floor(Math.log2(Math.max(w, h))));
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, B.fb);
+      gl.useProgram(down);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, A.t);
+      gl.uniform1i(U(down, "src"), 1);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.useProgram(film);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, B.t);
+      gl.uniform1i(U(film, "blurred"), 1);
+      gl.uniform1i(U(film, "film"), FILM_INDEX[filmId]);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     },
   };
@@ -174,7 +254,7 @@ function cpuDarkroom(canvas: HTMLCanvasElement): Darkroom {
       w.drawImage(src, cx * sw, cy * sh, cw * sw, ch * sh, 0, 0, work.width, work.height);
       w.restore();
       const img = w.getImageData(0, 0, work.width, work.height);
-      img.data.set(develop(img.data, work.width, work.height, film));
+      img.data.set(develop(img.data, work.width, work.height, film, 2));
       w.putImageData(img, 0, 0);
       out.drawImage(work, 0, 0, VIEW.w, VIEW.h);
     },
