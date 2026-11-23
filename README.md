@@ -13,7 +13,7 @@
 <br/>
 
 [![Live on Vercel](https://img.shields.io/badge/live-Vercel-9E3B4C?style=flat-square&logo=vercel&logoColor=white)](https://advent-birthday-hng9.vercel.app)
-![Doors open](https://img.shields.io/badge/doors_open-6_of_12-9E3B4C?style=flat-square)
+![Doors open](https://img.shields.io/badge/doors_open-7_of_12-9E3B4C?style=flat-square)
 ![Next.js](https://img.shields.io/badge/Next.js_16-000?style=flat-square&logo=nextdotjs)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase_Realtime-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
@@ -49,6 +49,9 @@ kibble drops for Mochi, the cat who lives here.
   she chases it; click her and she purrs; leave her alone and she naps.
 - **Paint your own records.** On door 3, enter your birthday and every song in
   the crate gets a record painted from it. Download yours or share the link.
+- **Take a strip of photos.** On door 6, pose four times in rose ink or
+  classic black and white, print it at the real 2 × 6 inch size and sign the
+  guestbook.
 - **Come back at night.** The sky is Bangalore's real sky, the lamps come on in
   the windows that have been worked in, and tomorrow there's a new door.
 
@@ -343,6 +346,65 @@ module's memory as a `Float32Array`, then hands that same array to the GPU.
 
 ---
 
+## Door 6 · The photo booth
+
+<p align="center"><img src="docs/animations/booth.gif" width="576" alt="A photo booth drawn in fine rose ink in a room whose window shows the golden-hour sky; stepping behind the curtain shows the viewfinder printing the sitter in rose ink beside a preview of the strip, a countdown takes four poses, and the finished strip develops in with stamps pressed onto it"></p>
+
+**What you're seeing:** an old-fashioned photo booth, drawn in the same line as
+the rest of the building, standing in a room whose window shows Bangalore's
+real sky. [Step behind the curtain](https://advent-birthday-hng9.vercel.app/door/6)
+and the booth prints you live, in rose ink on cream paper or as a classic
+black-and-white booth strip, with a little strip beside the viewfinder showing
+exactly how your frame will look. Count down four poses and the strip slides
+out: press stamps on it, save it, or print it at the real 2 × 6 inch size. Then sign the guestbook on the wall, which fills in
+live for everyone. The photos never leave your screen; only the guestbook's
+words are kept.
+
+**How it works**
+
+- **Developed live on the GPU.** Every camera frame goes through three
+  shader passes. The first reads the camera and sets the exposure from the
+  frame's average brightness, which is free: the top level of a texture's
+  mipmap chain *is* the average of every pixel. The next two blur it very
+  slightly, across and then down (a Gaussian blur splits into two 1D passes,
+  so it costs far fewer reads), which calms webcam noise. The last prints it in
+  rose ink or black-and-white silver with grain. The same maths in TypeScript is
+  tested and takes over on browsers without WebGL2.
+- **See the strip before you shoot.** A few times a second the booth paints
+  the whole strip beside the viewfinder: the poses you've taken so far, then the
+  live view in every window still to fill, inside the frame you've chosen.
+- **The canvas is the print.** A strip is 2 × 6 inches, and at 300 dots per
+  inch that's exactly 600 × 1800 pixels, so the strip is painted at print size
+  and printing just hands that image to a page whose CSS `@page` is 2 × 6
+  inches. No resizing between the screen and the paper.
+- **The sky on the film.** The window's wash, and the line printed along the
+  bottom of every strip (place, date, time, sky and temperature), come from
+  the same live Bangalore weather as the rest of the building.
+- **A guestbook that stays kind.** Notes are checked on the page, again by the
+  API (length, no links, a word filter that catches `sh1t` and `s.h.i.t`), and
+  a third time by the table's own constraints. A sliding-window rate limit
+  allows three notes per ten minutes per visitor, and new notes reach every
+  open booth through Supabase Realtime.
+
+<details>
+<summary><b>The interesting bit: telling visitors apart without knowing who they are</b></summary>
+
+A rate limit needs to know whether two requests came from the same person,
+but storing IP addresses would mean keeping personal data for a guestbook.
+So the server keeps a keyed hash of the address instead:
+
+```ts
+const visitor = createHmac("sha256", secret).update(`guestbook:${ip}`).digest("hex").slice(0, 32);
+```
+
+The same visitor always gets the same hash, so the limit works, but without
+the server's secret nobody can test guesses against it, and the address
+itself is never written down. Those rows are invisible to the public key and
+are cleared after a day.
+</details>
+
+---
+
 ## More of the building
 
 <table>
@@ -380,7 +442,7 @@ learn.
 | 3 | [Birthday records](https://advent-birthday-hng9.vercel.app/door/3) | seeded generative painting, Spotify iFrame API | open |
 | 4 | [The commit pond](https://advent-birthday-hng9.vercel.app/door/4) | boids, spatial hashing, GPU water, WebGPU compute | open |
 | 5 | [The infinite bloom](https://advent-birthday-hng9.vercel.app/door/5) | self-similarity, SDF shaders, Rust → WebAssembly | open |
-| 6 | Cozy room, real sky | caching, edge functions | shuttered |
+| 6 | [The photo booth](https://advent-birthday-hng9.vercel.app/door/6) | GPU image pipeline, print-size canvas, rate limiting | open |
 | 7 | Firefly music | embeddings, clustering | shuttered |
 | 8 | Holographic card | sensor APIs, OG images | shuttered |
 | 9 | Time-locked letter | applied cryptography | shuttered |
@@ -420,7 +482,7 @@ flowchart LR
   maths and the record painter are pure modules with `node:test` tests; the
   React components just draw what they return.
 - **Private by default.** "Make yours" only uses a month and day, keeps it in
-  the URL, and saves nothing.
+  the URL, and saves nothing. The booth's photos never leave the browser.
 - **Accessible.** Windows and Mochi are real buttons with spoken labels, there's
   a zoom mode and keyboard navigation, and all motion respects
   `prefers-reduced-motion`.
@@ -447,15 +509,18 @@ apps/web/                 the Next.js site
   app/page.tsx            the building (server: unlock rules, sky, pushes)
   app/door/[n]/           one page per door, sealed until its day
   app/api/github/webhook/ signed GitHub push → record_push()
+  app/api/guestbook/      the booth's guestbook: checked, rate-limited notes
   components/building/    façade, windows, window boxes, constellations, elevator
   components/mochi/       Mochi's drawing, runtime loop, live statechart diagram
   components/records/     record disc, turntable, crate, Spotify player hook
   components/pond/        GPU water, the pond, looks, the WebGPU stress test
   components/bloom/       the infinite bloom: SDF renderer and page
+  components/booth/       the photo booth: room, GPU darkroom, strip painter, guestbook
   lib/mochi/              her statechart and world model (A*, jump arcs), with tests
   lib/records/            the seeded record painter and the song list, with tests
   lib/pond/               flocking, spatial hash and koi-from-pushes, with tests
   lib/bloom/              self-similarity maths and the tree walk, with tests
+  lib/booth/              films, the 2 × 6 strip and guestbook rules, with tests
 wasm/bloom/               the same tree walk in Rust (pnpm build:wasm)
   lib/                    unlock rules (IST), sky, constellations, file kinds
 packages/garden-ui/       shared design tokens, motion presets, DoorFrame

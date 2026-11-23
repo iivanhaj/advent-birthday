@@ -313,6 +313,39 @@ await cast("bloom", {
   },
 });
 
+// 7. The photo booth: the room at golden hour, behind the curtain, four poses, the strip and its stamps.
+await cast("booth", {
+  path: "/door/6?sky=dusk",
+  w: 1280,
+  h: 1000,
+  seconds: 19,
+  scale: 0.5,
+  minFrameMs: 110,
+  setup: async () => {
+    await js(`(() => { const s = document.querySelector('section[aria-label="The photo booth"]'); scrollTo(0, s.getBoundingClientRect().top + scrollY - 10); })()`);
+    await sleep(600);
+  },
+  clip: async () => {
+    const r = await rect('section[aria-label="The photo booth"]');
+    return { x: r.x, y: r.y, width: r.w, height: Math.min(830, 1000 - r.y) }; // tall enough for the developing strip
+  },
+  script: async () => {
+    const button = (text) => js(`[...document.querySelectorAll('button')].find(b => b.textContent.trim() === ${JSON.stringify(text)})?.click()`);
+    await sleep(1800);
+    await button("Step behind the curtain");
+    await sleep(1600);
+    await button("Garden vine");
+    await sleep(500);
+    await button("begin");
+    await sleep(11500);
+    const stamp = (i, u, v) =>
+      js(`document.querySelectorAll('[aria-label$=" stamp"]')[${i}].click()`).then(() => sleep(150)).then(() => js(`(() => { const c = document.querySelector('canvas.booth-develop'); const b = c.getBoundingClientRect(); c.dispatchEvent(new PointerEvent('pointerdown', { clientX: b.left + b.width * ${u}, clientY: b.top + b.height * ${v}, bubbles: true })); })()`));
+    await stamp(0, 0.78, 0.2);
+    await sleep(500);
+    await stamp(4, 0.25, 0.68);
+  },
+});
+
 ws.close();
 chrome.kill();
 console.log(`Saved to ${OUT}`);
