@@ -346,6 +346,37 @@ await cast("booth", {
   },
 });
 
+// 8. The firefly carousel: turn it, change the mood, then play a song while it spins.
+await cast("carousel", {
+  path: "/door/7",
+  w: 1280,
+  h: 1000,
+  seconds: 14,
+  scale: 0.5,
+  minFrameMs: 100,
+  setup: async () => {
+    await js(`(() => { const s = document.querySelector('section[aria-label="The firefly carousel"]'); scrollTo(0, s.getBoundingClientRect().top + scrollY - 10); })()`);
+    await sleep(2500);
+  },
+  clip: async () => {
+    const r = await rect('section[aria-label="The firefly carousel"]');
+    const b = await rect('button[aria-label="Turn the carousel right"]');
+    return { x: r.x, y: r.y, width: r.w, height: b.y + b.h + 24 - r.y }; // down to the buttons, not the Spotify player
+  },
+  script: async () => {
+    const click = (sel) => js(`document.querySelector(${JSON.stringify(sel)})?.click()`);
+    const button = (text) => js(`[...document.querySelectorAll('button')].find(b => b.textContent.trim() === ${JSON.stringify(text)})?.click()`);
+    await sleep(1200);
+    await click('button[aria-label="Turn the carousel right"]');
+    await sleep(1400);
+    await click('button[aria-label="Turn the carousel right"]');
+    await sleep(1600);
+    await button("bright and bouncy");
+    await sleep(3000);
+    await button("Play");
+  },
+});
+
 ws.close();
 chrome.kill();
 console.log(`Saved to ${OUT}`);

@@ -13,7 +13,7 @@
 <br/>
 
 [![Live on Vercel](https://img.shields.io/badge/live-Vercel-9E3B4C?style=flat-square&logo=vercel&logoColor=white)](https://advent-birthday-hng9.vercel.app)
-![Doors open](https://img.shields.io/badge/doors_open-7_of_12-9E3B4C?style=flat-square)
+![Doors open](https://img.shields.io/badge/doors_open-8_of_12-9E3B4C?style=flat-square)
 ![Next.js](https://img.shields.io/badge/Next.js_16-000?style=flat-square&logo=nextdotjs)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase_Realtime-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
@@ -52,6 +52,8 @@ kibble drops for Mochi, the cat who lives here.
 - **Take a strip of photos.** On door 6, pose four times in rose ink or
   classic black and white, print it at the real 2 × 6 inch size and sign the
   guestbook.
+- **Play the carousel.** On door 7, pick a mood, turn the carousel until a
+  song you like is at the front, and let the music box wind it up.
 - **Come back at night.** The sky is Bangalore's real sky, the lamps come on in
   the windows that have been worked in, and tomorrow there's a new door.
 
@@ -405,6 +407,68 @@ are cleared after a day.
 
 ---
 
+## Door 7 · The firefly carousel
+
+<p align="center"><img src="docs/animations/carousel.gif" width="512" alt="A carousel drawn in fine rose and brass lines with pale pink and butter stripes, a glass lantern with a glowing firefly hanging from every pole; it turns a pole at a time, the mood changes to bright and bouncy, and the carousel spins with the lanterns bobbing as a song plays"></p>
+
+**What you're seeing:** a music-box carousel, drawn in 3D but only in the
+building's fine lines and a few pale washes. Every pole carries a glass lantern
+with a firefly inside, and every firefly is one of 87 songs from a playlist.
+[Pick a mood](https://advent-birthday-hng9.vercel.app/door/7), turn the
+carousel until the song you want is at the front, and press play: the box
+winds up a little tune of its own for that song, then the song plays through
+Spotify while the carousel turns and the lanterns rise and fall.
+
+**How it works**
+
+- **Every song is a point in a mood space.** Each one has six scores (energy,
+  brightness, romance, longing, haze, night), so songs that feel alike sit
+  close together.
+- **The moods come from clustering.** k-means++ picks five far-apart starting
+  points and k-means settles them into groups, over a dozen seeded restarts,
+  keeping the tightest. Each group is then named by trying every pairing of
+  groups to five named moods (5! = 120) and keeping the closest.
+- **Every carousel is full.** Plain k-means happily makes one group of 30 and
+  another of 6. Here assignment hands out the closest song–group pairs first
+  and stops filling a group at ⌈87 / 5⌉, so every carousel gets 16 to 18 songs.
+- **Neighbours sound alike.** Each carousel is a loop, so the songs are ordered
+  by a nearest-neighbour tour through their mood points, tidied with 2-opt
+  (reverse any stretch that makes the loop shorter) until nothing improves.
+  Turning the carousel drifts gently from one feeling to the next.
+- **Drawn in lines, in three.js.** No models: the base, the barley-twist brass
+  poles, the scalloped canopy, the bows and the lanterns are line segments
+  built from a handful of curves, with see-through stripes for colour. The
+  fireflies are glowing point sprites drawn last, so the stripes never cover them.
+- **A music box with no audio files.** Each note is a sine with two quiet
+  overtones that fade faster than it does, like a plucked steel tooth, made
+  with the Web Audio API. The tune is seeded with the song's Spotify ID, so
+  every song has its own.
+
+<details>
+<summary><b>The interesting bit: keeping clusters the same size</b></summary>
+
+k-means on its own only minimises distance, so nothing stops one mood from
+swallowing a third of the playlist. The balanced version changes one step,
+the assignment:
+
+```ts
+pairs.sort((a, b) => a.distance - b.distance);  // every (song, group) pair, closest first
+for (const { song, group } of pairs) {
+  if (assigned[song] || size[group] >= cap) continue;
+  assigned[song] = group;
+  size[group]++;
+}
+```
+
+Every song still goes to the nearest group with room for it, the centres
+then move to the middle of their songs, and it repeats until nothing changes.
+It's all pure TypeScript with tests: the clusters come out the same on every
+build, every song lands on exactly one carousel, and the ring order is never
+longer than the playlist's own order.
+</details>
+
+---
+
 ## More of the building
 
 <table>
@@ -443,7 +507,7 @@ learn.
 | 4 | [The commit pond](https://advent-birthday-hng9.vercel.app/door/4) | boids, spatial hashing, GPU water, WebGPU compute | open |
 | 5 | [The infinite bloom](https://advent-birthday-hng9.vercel.app/door/5) | self-similarity, SDF shaders, Rust → WebAssembly | open |
 | 6 | [The photo booth](https://advent-birthday-hng9.vercel.app/door/6) | GPU image pipeline, print-size canvas, rate limiting | open |
-| 7 | Firefly music | embeddings, clustering | shuttered |
+| 7 | [The firefly carousel](https://advent-birthday-hng9.vercel.app/door/7) | balanced k-means, 2-opt, three.js line art, Web Audio | open |
 | 8 | Holographic card | sensor APIs, OG images | shuttered |
 | 9 | Time-locked letter | applied cryptography | shuttered |
 | 10 | The game | ECS, deterministic replays | shuttered |
@@ -496,8 +560,8 @@ flowchart LR
 | | |
 |---|---|
 | **Frontend** | Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Framer Motion · hand-drawn SVG · Canvas 2D |
-| **Behaviour** | XState 5 statecharts · A\* pathfinding · projectile physics · boids with a spatial hash · seeded PRNG (mulberry32) |
-| **GPU** | WebGL2 wave-equation water · signed-distance-field shaders · WebGPU compute and instanced rendering (WGSL) |
+| **Behaviour** | XState 5 statecharts · A\* pathfinding · projectile physics · boids with a spatial hash · balanced k-means and 2-opt · seeded PRNG (mulberry32) |
+| **GPU** | three.js line art · WebGL2 wave-equation water · signed-distance-field shaders · WebGPU compute and instanced rendering (WGSL) |
 | **Rust** | a tiny Rust crate compiled to WebAssembly (no wasm-bindgen), raced against TypeScript |
 | **Backend** | Next.js route handlers · Supabase (Postgres, Row Level Security, Realtime) |
 | **Data** | GitHub push webhooks · Open-Meteo weather API · Spotify embed (iFrame API) |
@@ -516,11 +580,13 @@ apps/web/                 the Next.js site
   components/pond/        GPU water, the pond, looks, the WebGPU stress test
   components/bloom/       the infinite bloom: SDF renderer and page
   components/booth/       the photo booth: room, GPU darkroom, strip painter, guestbook
+  components/firefly/     the 3D line-art carousel and the music box
   lib/mochi/              her statechart and world model (A*, jump arcs), with tests
   lib/records/            the seeded record painter and the song list, with tests
   lib/pond/               flocking, spatial hash and koi-from-pushes, with tests
   lib/bloom/              self-similarity maths and the tree walk, with tests
   lib/booth/              films, the 2 × 6 strip and guestbook rules, with tests
+  lib/firefly/            the songs' moods, clustering and ring order, with tests
 wasm/bloom/               the same tree walk in Rust (pnpm build:wasm)
   lib/                    unlock rules (IST), sky, constellations, file kinds
 packages/garden-ui/       shared design tokens, motion presets, DoorFrame
