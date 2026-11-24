@@ -3,11 +3,11 @@
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { springs } from "@birthday-garden/garden-ui";
-import { Room } from "@/components/building/Room";
 
 /**
- * What a door shows until its build lands: the window's little room, framed
- * in an arch on paper, with the door's title. The fly-through lands on the
+ * What a door shows until its build lands: the window, framed in an arch on
+ * paper, with a pendant lamp hanging in it (lit once work has started), and
+ * the door's title. The fly-through lands on the
  * same paper and title, so opening the window has no visible cut.
  */
 export function DoorPlaceholder({ n, title, lit }: { n: number; title: string; lit: boolean }) {
@@ -22,9 +22,14 @@ export function DoorPlaceholder({ n, title, lit }: { n: number; title: string; l
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0, transition: { ...springs.gentle, delay: 0.15 } }}
       >
-        <div className="absolute inset-0 flex items-end justify-center pb-4">
-          <Room n={n} className="h-[78%] w-[78%]" />
-        </div>
+        <svg viewBox="0 0 240 320" className="absolute inset-0 h-full w-full" aria-hidden>
+          {lit && <ellipse cx="120" cy="196" rx="70" ry="38" fill="#FFF6DC" opacity="0.65" />}
+          <g fill="none" stroke="var(--color-line)" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M120 0 V140" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+            <path d="M110 140 H130 L138 156 H102 Z" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+            <path d="M120 0 V320" strokeWidth={1} opacity={0.3} vectorEffect="non-scaling-stroke" />
+          </g>
+        </svg>
       </motion.div>
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0, transition: { ...springs.gentle, delay: 0.3 } }}>
         <p className="font-sans text-[11px] font-medium tracking-[0.2em] uppercase opacity-70">No. {String(n).padStart(2, "0")}</p>
