@@ -40,7 +40,7 @@ function loadApi(): Promise<IFrameAPI> {
   return window.__spotifyApi;
 }
 
-export function useSpotify(firstTrack: string) {
+export function useSpotify(firstTrack: string, height = 152) {
   const host = useRef<HTMLDivElement>(null);
   const ctl = useRef<Controller | null>(null);
   /** A track picked before the player finished loading: played as soon as it's ready. */
@@ -55,7 +55,7 @@ export function useSpotify(firstTrack: string) {
       // The API replaces the element it's given, so hand it a child it can own.
       const el = document.createElement("div");
       host.current.appendChild(el);
-      api.createController(el, { uri: `spotify:track:${firstTrack}`, width: "100%", height: 152 }, (c) => {
+      api.createController(el, { uri: `spotify:track:${firstTrack}`, width: "100%", height }, (c) => {
         if (cancelled) return c.destroy();
         ctl.current = c;
         c.addListener("playback_update", (e) => setState({ position: e.data.position, duration: e.data.duration, paused: e.data.isPaused }));

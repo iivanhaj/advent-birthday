@@ -12,6 +12,7 @@ import { BirthdayRecords } from "./BirthdayRecords";
 import { CommitPond } from "./CommitPond";
 import { BloomPage } from "./BloomPage";
 import { BoothPage } from "./BoothPage";
+import { FireflyPage } from "./FireflyPage";
 import { getSky } from "@/lib/sky";
 import { boothSky } from "@/lib/booth/strip";
 
@@ -46,6 +47,11 @@ const LEARNED: Record<number, string[]> = {
     "the top level of a texture's mipmap chain is the whole image's average colour, so auto-exposure is one texture lookup",
     "2 × 6 inches at 300 dpi is exactly 600 × 1800 pixels, so the canvas is the print and CSS @page sets the paper size",
     "rate-limit by a keyed hash of the IP: it tells visitors apart without ever storing an address",
+  ],
+  7: [
+    "k-means with a cap (closest song–group pairs first, stop filling at n / k) keeps every carousel full",
+    "a nearest-neighbour loop tidied by 2-opt reversals puts songs that sound alike next to each other",
+    "a music-box note is a sine and two quiet overtones that fade fast; seed the tune with the song ID and every song gets its own",
   ],
 };
 
@@ -140,6 +146,15 @@ export default async function DoorPage({ params, searchParams }: Params) {
     return (
       <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
         <BoothPage sky={boothSky(sky.phase, sky.raining)} tempC={sky.tempC} />
+      </DoorFrame>
+    );
+  }
+
+  // Door 7: the firefly carousel.
+  if (n === 7) {
+    return (
+      <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
+        <FireflyPage />
       </DoorFrame>
     );
   }

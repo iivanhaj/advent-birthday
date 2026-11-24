@@ -188,7 +188,7 @@ export function Mochi() {
       const st = s.state;
       if (st === "wander") {
         const ledges = platforms.filter((p) => p.x1 - p.x0 > s.width * 0.8);
-        for (let tries = 0; tries < 8; tries++) {
+        for (let tries = 0; tries < 8 && ledges.length; tries++) {
           const p = ledges[Math.floor(Math.random() * ledges.length)];
           const x = rand(p.x0 + s.width * 0.4, p.x1 - s.width * 0.4);
           if (Math.abs(x - s.x) < 60 && p.id === s.pid) continue;
