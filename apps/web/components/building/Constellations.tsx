@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { VIEW_H, VIEW_W } from "@/lib/building";
-import { anchors, constellation, starPath } from "@/lib/constellations";
+import { anchors, constellation, constellationRadius, starPath } from "@/lib/constellations";
 import { commitTitle, pushesByDoor, type PushRow } from "@/lib/pushes";
 import type { SkyPhase } from "@/lib/sky";
 
@@ -32,7 +32,7 @@ export function Constellations({ pushes, fresh, isPhone, phase, todayDoor, built
   const night = phase === "night" || phase === "dusk";
   const ink = night ? "#FBF1EE" : "var(--color-line)";
   const spots = anchors(isPhone, side);
-  const radius = isPhone ? 27 : 54;
+  const radius = constellationRadius(isPhone, side);
   const groups = [...pushesByDoor(pushes).entries()].map(([door, list]) => constellation(door, list, spots[door], radius));
 
   return (

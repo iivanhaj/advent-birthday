@@ -127,10 +127,15 @@ export function Window({ win, state, title, dateLabel, isToday, phase, lampOn, l
           }}
         />
 
-        {/* the room, deeper than the glass */}
-        <motion.span className="absolute -inset-[10%] flex items-end justify-center pb-[10%]" style={{ x: roomX, y: roomY }}>
-          <Room n={win.n} color={roomColor} className="h-[78%] w-[78%]" />
-        </motion.span>
+        {win.n === FRONT_DOOR ? (
+          // the front door's panels, set a little behind the frame
+          <motion.span className="absolute -inset-[10%] flex items-end justify-center pb-[10%]" style={{ x: roomX, y: roomY }}>
+            <Room n={win.n} color={roomColor} className="h-[78%] w-[78%]" />
+          </motion.span>
+        ) : (
+          // every other window: just a pendant lamp hanging in the room, and the glazing bars
+          <Pendant win={win} color={roomColor} lit={lampOn} roomX={roomX} roomY={roomY} />
+        )}
 
         {/*
           Shutters: two real 3D panels hinged on the outer edges. `perspective`
@@ -162,6 +167,20 @@ export function Window({ win, state, title, dateLabel, isToday, phase, lampOn, l
         cqw (1% of the building's width), so they scale with the drawing and
         never cross a floor line at any screen size.
       */}
+      {/* today's window wears a little ribbon tag */}
+      {isToday && !locked && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute z-10 flex items-center justify-center font-serif text-line italic"
+          style={{ top: "-9%", right: "-12%", width: "40%", minWidth: 34, height: "16%", minHeight: 13, fontSize: "max(8px, 2.3cqw)", transform: "rotate(8deg)" }}
+        >
+          <svg viewBox="0 0 40 16" preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible">
+            <path d="M0 0 H40 L35 8 L40 16 H0 Z" fill="rgba(229,143,168,.55)" stroke="var(--color-line)" strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
+          </svg>
+          <span className="relative pr-[8%]">today</span>
+        </span>
+      )}
+
       {win.n === FRONT_DOOR ? (
         <span
           aria-hidden
@@ -181,5 +200,34 @@ export function Window({ win, state, title, dateLabel, isToday, phase, lampOn, l
       )}
 
     </div>
+  );
+}
+
+/**
+ * A lit room seen from the street: a small pendant lamp hanging on its cord,
+ * a soft pool of light under the shade, and the window's glazing bars. The
+ * lamp sits deeper than the glass, so it drifts a little with the parallax.
+ */
+function Pendant({ win, color, lit, roomX, roomY }: { win: BuildingWindow; color: string; lit: boolean; roomX: MotionValue<string>; roomY: MotionValue<string> }) {
+  const { w, h } = win;
+  const cx = w / 2;
+  const s = Math.min(w, h);
+  const drop = win.shape === "round" ? h * 0.42 : win.shape === "arch" ? Math.min(h * 0.42, w * 0.62) : h * 0.32;
+  const sw = s * 0.11;
+  const sh = s * 0.07;
+  const bars = win.shape === "rect" ? `M${cx} 0 V${h} M0 ${h * 0.42} H${w}` : `M${cx} 0 V${h}`;
+  return (
+    <>
+      <motion.svg viewBox={`0 0 ${w} ${h}`} className="pointer-events-none absolute inset-0 h-full w-full" style={{ x: roomX, y: roomY }} aria-hidden>
+        <ellipse cx={cx} cy={drop + sh + s * 0.16} rx={s * 0.3} ry={s * 0.17} fill="#FFF6DC" opacity={lit ? 0.6 : 0} style={{ transition: "opacity 0.6s" }} />
+        <g fill="none" stroke={color} strokeLinecap="round" strokeLinejoin="round">
+          <path d={`M${cx} 0 V${drop}`} strokeWidth={0.8} vectorEffect="non-scaling-stroke" />
+          <path d={`M${cx - sw * 0.35} ${drop} H${cx + sw * 0.35} L${cx + sw / 2} ${drop + sh} H${cx - sw / 2} Z`} strokeWidth={1} vectorEffect="non-scaling-stroke" />
+        </g>
+      </motion.svg>
+      <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden>
+        <path d={bars} fill="none" stroke={color} strokeWidth={0.8} opacity={0.35} vectorEffect="non-scaling-stroke" />
+      </svg>
+    </>
   );
 }

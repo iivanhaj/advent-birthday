@@ -82,6 +82,60 @@ export function facadeStrokes(): string[] {
   return s;
 }
 
+/** A window's outline, grown by `o` units on every side (for the moulded frame round it). */
+export function windowOutline(w: BuildingWindow, o = 0): string {
+  const x = w.x - o, y = w.y - o, ww = w.w + 2 * o, h = w.h + 2 * o;
+  if (w.shape === "round") return `M${x + ww / 2} ${y} a${ww / 2} ${h / 2} 0 1 0 .1 0 Z`;
+  if (w.shape === "arch") {
+    const r = ww / 2;
+    return `M${x} ${y + h} V${y + r} A${r} ${r} 0 0 1 ${x + ww} ${y + r} V${y + h}`;
+  }
+  return `M${x} ${y} H${x + ww} V${y + h} H${x} Z`;
+}
+
+/**
+ * The finer details that make the façade read as a building rather than an
+ * outline: drawn after the main strokes, in the same pen.
+ *  - `trim`: moulded frames round every window, keystones on the arches,
+ *    little brackets under the sills, dentils under the cornice, a second line
+ *    on each string course, a star on the pediment, a cap on the chimney.
+ *  - `texture`: very faint stucco courses and corner stones (quoins).
+ */
+export function facadeDetails(): { trim: string[]; texture: string[] } {
+  const trim: string[] = [];
+  for (const w of WINDOWS) {
+    trim.push(windowOutline(w, 5));
+    if (w.shape === "arch") trim.push(`M${w.x + w.w / 2 - 6} ${w.y - 7} h12 l-2 10 h-8 Z`);
+    if (w.n !== FRONT_DOOR) {
+      const y = w.y + w.h + SILL;
+      trim.push(`M${w.x + 1} ${y} q0 3.5 4 3.5 M${w.x + w.w - 1} ${y} q0 3.5 -4 3.5`);
+    }
+  }
+  for (let x = 44; x < 438; x += 12) trim.push(`M${x} 92 v5 h6 v-5`);
+  for (const y of [268, 396, 528]) trim.push(`M40 ${y - 5} H440`);
+  trim.push("M240 49 l3 6 6 1 -5 4 1 6 -5 -3 -5 3 1 -6 -5 -4 6 -1 Z", "M364 36 H404 V30 H364 Z");
+  // the front door's step, and a potted bay tree either side of it
+  trim.push("M200 700 v-4 h88 v4");
+  for (const x of [196, 284]) {
+    trim.push(`M${x - 9} 696 L${x - 11} 682 H${x + 11} L${x + 9} 696`, `M${x} 682 C${x - 2} 666 ${x} 658 ${x} 652 M${x} 672 c-5 -2 -8 -6 -8 -10 M${x} 666 c5 -2 7 -6 7 -9 M${x} 658 c-4 -1 -6 -4 -6 -7`);
+  }
+  const texture: string[] = [];
+  for (let y = 114; y < 700; y += 22) texture.push(`M44 ${y} H436`);
+  for (let y = 100, i = 0; y < 690; y += 26, i++) {
+    const a = i % 2 ? 14 : 20;
+    texture.push(`M40 ${y} h${a} v24 h-${a} M440 ${y} h-${a} v24 h${a}`);
+  }
+  return { trim, texture };
+}
+
+/** The bunting flags as closed shapes, so they can carry a wash of colour. */
+export function buntingFlags(): string[] {
+  return [70, 100, 130, 160, 320, 350, 380, 410].map((x) => {
+    const y = Math.round((98 + Math.sin(((x - 40) / 394) * Math.PI) * 14) * 10) / 10;
+    return `M${x - 6} ${y + 2} L${x} ${y + 12} L${x + 6} ${y + 2} Z`;
+  });
+}
+
 /** Filled stripes on the awning (drawn as a soft tint, not strokes). */
 export function awningStripes(): string[] {
   const out: string[] = [];
@@ -89,19 +143,48 @@ export function awningStripes(): string[] {
   return out;
 }
 
-/** The tiny room behind each window, drawn in a 100 × 100 box (floor at the bottom). */
+/** A five-petal flower as outline circles, for the room drawings. */
+function flower(x: number, y: number, r: number): string {
+  let d = "";
+  for (let i = 0; i < 5; i++) {
+    const a = i * 1.2566 - Math.PI / 2;
+    const cx = Math.round((x + Math.cos(a) * r) * 10) / 10;
+    const cy = Math.round((y + Math.sin(a) * r) * 10) / 10;
+    const pr = Math.round(r * 6.2) / 10;
+    d += ` M${cx + pr} ${cy} a${pr} ${pr} 0 1 0 .1 0`;
+  }
+  return d + ` M${x + r * 0.35} ${y} a${r * 0.35} ${r * 0.35} 0 1 0 .1 0`;
+}
+
+/**
+ * The tiny room behind each window, drawn in a 100 × 100 box (floor at the
+ * bottom): one object for that day's build, standing on the floor or a piece
+ * of furniture. The building itself only shows the front door's; the rest
+ * appear on the door pages still to come.
+ */
 export const ROOMS: Record<number, string> = {
-  1: "M30 100 L34 80 H50 L54 100 M42 80 C40 66 30 62 26 56 M42 80 C44 64 54 58 60 52 M42 80 L42 60 M62 100 L64 88 H76 L78 100 M70 88 C68 80 72 74 76 70 M14 100 H86",
-  2: "M20 100 C20 90 80 90 80 100 M30 92 C30 76 60 72 66 86 C68 92 60 94 50 94 C42 94 34 94 30 92 M58 78 L60 70 L64 78 M30 92 C22 92 22 84 28 84 M70 62 h7 l-7 7 h7",
-  3: "M14 100 V84 H86 V100 Z M20 84 C20 74 68 74 68 84 M36 82 C36 79 52 79 52 82 M78 84 V66 L64 76 M74 90 h6 M42 56 V40 L56 37 V53 M42 56 a3.5 2.5 0 1 1 -.1 0 M56 53 a3.5 2.5 0 1 1 -.1 0",
-  4: "M18 100 V58 H82 V100 Z M18 68 C30 63 40 73 50 68 S70 63 82 68 M36 84 C44 76 54 76 60 84 C54 92 44 92 36 84 Z M60 84 L68 78 L68 90 Z M70 60 a2 2 0 1 0 .1 0 M74 52 a2 2 0 1 0 .1 0",
-  5: "M42 100 C36 92 38 82 44 78 H56 C62 82 64 92 58 100 Z M50 78 C50 60 46 50 38 42 M50 78 C52 62 58 54 64 46 M50 78 L50 36 M38 42 a4 4 0 1 0 .1 0 M64 46 a4 4 0 1 0 .1 0 M50 36 a5 5 0 1 0 .1 0 M10 100 H90",
-  6: "M20 100 V80 C20 70 52 70 52 80 V100 M16 86 H56 M74 100 V58 M65 58 H83 L78 46 H70 Z M60 30 a7 7 0 1 0 8 -3",
-  7: "M20 100 V84 H80 V100 Z M28 84 C28 78 62 78 62 84 M72 84 L72 74 L60 80 M38 64 V48 L52 45 V61 M38 64 a3.5 2.5 0 1 1 -.1 0 M52 61 a3.5 2.5 0 1 1 -.1 0",
-  8: "M34 36 H66 V80 H34 Z M50 46 L53 55 L62 55 L55 61 L58 70 L50 64 L42 70 L45 61 L38 55 L47 55 Z M18 96 H82 M24 96 V90 H32 V96",
+  // a bell jar over a fern, on a side table (the living garden)
+  1: "M26 100 V84 M74 100 V84 M20 84 H80 M36 84 H64 V80 H36 Z M38 80 V58 C38 40 62 40 62 58 V80 M47 44 a3 3 0 1 0 6 0 a3 3 0 1 0 -6 0 M50 80 C50 70 50 64 50 56 M50 72 C44 68 41 63 42 58 C46 60 49 65 50 72 M50 66 C56 62 59 57 58 52 C54 55 51 60 50 66 M41 62 C44 61 46 63 47 65",
+  // Mochi asleep in her basket
+  2: "M20 100 C20 84 80 84 80 100 M24 92 H76 M22 97 H78 M30 88 C27 73 42 64 57 68 C67 70 72 78 70 88 M57 68 L60 60 L64 69 M64 69 L68 62 L70 72 M30 88 C40 93 58 93 68 88 M59 77 q3 2 6 0 M76 60 h5 l-5 5 h5 M83 50 h4 l-4 4 h4",
+  // a record player on a cabinet, notes rising
+  3: "M20 100 V80 H80 V100 M20 90 H80 M50 80 V100 M44 85 h-4 M60 85 h-4 M24 80 V72 H76 V80 M30 72 a17 3.4 0 1 0 34 0 a17 3.4 0 1 0 -34 0 M44 72 a3 .8 0 1 0 6 0 a3 .8 0 1 0 -6 0 M72 64 V72 M72 64 L60 69 M36 54 V40 L48 36 V50 M36 54 a3.5 2.4 0 1 1 -.1 0 M48 50 a3.5 2.4 0 1 1 -.1 0",
+  // a fishbowl with a koi (the commit pond)
+  4: "M34 100 L40 87 H60 L66 100 M37 93 H63 M40 87 C26 78 27 55 41 50 H59 C73 55 74 78 60 87 Z M32 63 C42 66 58 61 68 63 M45 74 C49 70 57 70 59 74 C57 78 49 78 45 74 Z M45 74 L40 71 L40 77 Z M56 73 a.8 .8 0 1 0 .1 0 M62 56 a1.6 1.6 0 1 0 .1 0 M58 50 a1.2 1.2 0 1 0 .1 0",
+  // a vase of flowers (the infinite bloom)
+  5: "M40 100 C33 92 36 80 43 76 H57 C64 80 67 92 60 100 Z M42 82 H58 M50 76 C50 62 46 52 38 44 M50 76 C52 62 58 54 66 48 M50 76 V38 M50 64 C46 62 44 58 44 56 M50 60 C55 58 58 55 58 53" + flower(38, 42, 4.5) + flower(66, 46, 4.5) + flower(50, 33, 5.5),
+  // a camera on a tripod (the photo booth)
+  6: "M50 72 L36 100 M50 72 L64 100 M50 72 V100 M42 88 H58 M32 54 H68 V72 H32 Z M36 54 V50 H44 V54 M56 62 a7 7 0 1 0 -12 0 a7 7 0 1 0 12 0 M53 62 a3 3 0 1 0 -6 0 a3 3 0 1 0 6 0 M62 58 h3",
+  // a little carousel music box (firefly music)
+  7: "M26 100 V94 H74 V100 M24 94 C24 90 76 90 76 94 M32 92 V64 M42 92 V64 M58 92 V64 M68 92 V64 M50 92 V62 M26 64 H74 M26 64 C30 70 34 70 38 64 C42 70 46 70 50 64 C54 70 58 70 62 64 C66 70 70 70 74 64 M26 64 L50 46 L74 64 M50 46 V38 M50 38 L58 40 L50 43 M30 80 h4 v4 h-4z M64 78 h4 v4 h-4z",
+  // a card on an easel, catching the light (the holographic card)
+  8: "M38 100 L46 48 M62 100 L54 48 M50 44 V100 M34 52 H66 V80 H34 Z M40 58 L60 74 M60 58 L40 74 M74 40 v8 M70 44 h8 M26 46 v6 M23 49 h6",
+  // the front door: panels, a letter slot, a knob
   9: "M28 100 V44 H72 V100 M42 70 H58 M40 50 H60 V62 H40 Z M40 50 L50 57 L60 50 M64 74 a2 2 0 1 0 .1 0",
-  10: "M20 90 V50 H80 V90 Z M30 90 L26 100 M70 90 L74 100 M28 80 H44 M54 70 H72 M33 72 h6 v8 h-6z M60 60 L62 64 L66 64 L63 67 L64 71 L60 68 L56 71 L57 67 L54 64 L58 64 Z",
-  11: "M12 100 V88 H88 V100 M28 88 V70 H72 V88 M36 70 V58 H64 V70 M44 58 V48 M50 58 V46 M56 58 V48 M44 48 C42 44 44 41 44 39 C44 41 46 44 44 48 M50 46 C48 42 50 39 50 37 C50 39 52 42 50 46 M56 48 C54 44 56 41 56 39 C56 41 58 44 56 48 M8 22 C30 34 70 34 92 22 M20 28 l4 9 5 -7 M44 32 l5 9 5 -9 M68 30 l5 8 4 -9 M28 79 C34 83 40 75 46 79 C52 83 58 75 64 79",
+  // an arcade cabinet (the game)
+  10: "M34 100 V44 L40 36 H62 L66 44 V100 M34 66 H66 M38 46 H62 V62 H38 Z M44 76 V70 M44 70 a3 3 0 1 0 .1 0 M56 74 a2 2 0 1 0 .1 0 M62 74 a2 2 0 1 0 .1 0 M40 86 H60",
+  // a birthday cake with three candles (blow out the candles)
+  11: "M16 100 H84 M24 100 V82 H76 V100 M32 82 V68 H68 V82 M24 86 C28 90 32 90 36 86 C40 90 44 90 48 86 C52 90 56 90 60 86 C64 90 68 90 72 86 M32 72 C36 75 40 75 44 72 C48 75 52 75 56 72 C60 75 64 75 68 72 M40 68 V58 M50 68 V56 M60 68 V58 M40 58 C38 54 40 52 40 50 C40 52 42 54 40 58 M50 56 C48 52 50 50 50 48 C50 50 52 52 50 56 M60 58 C58 54 60 52 60 50 C60 52 62 54 60 58",
 };
 
 /** CSS for an HTML element shaped like a window (arches get a fully rounded top). */

@@ -88,14 +88,18 @@ export function starPath(s: number): string {
 export function anchors(isPhone: boolean, side: number): [number, number][] {
   if (isPhone) {
     const xs = [60, 180, 300, 420];
-    const ys = [-182, -108, -36];
+    const ys = [-122, -72, -24]; // low enough to clear the title block above
     return Array.from({ length: 12 }, (_, i) => [xs[i % 4], ys[Math.floor(i / 4)]] as [number, number]);
   }
-  const L = (f: number) => r1(-side * f);
-  const R = (f: number) => r1(480 + side * f);
+  // keep each constellation (radius ≈ 0.3 × side, see constellationRadius) wholly inside its strip of sky
+  const L = (f: number) => r1(-side * (0.2 + f * 0.6));
+  const R = (f: number) => r1(480 + side * (0.2 + f * 0.6));
   // door 0, 1, 2… alternate left and right, top to bottom, staggered in and out
   return [
     [L(0.6), 200], [R(0.42), 130], [L(0.3), 300], [R(0.74), 230], [L(0.68), 400], [R(0.36), 330],
     [L(0.32), 500], [R(0.72), 430], [L(0.64), 600], [R(0.38), 530], [L(0.3), 690], [R(0.7), 630],
   ];
 }
+
+/** How big a constellation may be: smaller where the strip of sky beside the building is narrow. */
+export const constellationRadius = (isPhone: boolean, side: number) => (isPhone ? 27 : Math.min(54, r1(side * 0.3)));

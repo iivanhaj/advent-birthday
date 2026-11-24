@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useTransform } from "framer-motion";
 import { springs } from "@birthday-garden/garden-ui";
@@ -49,6 +50,8 @@ export function BuildingScene({ initialDoors, todayDoor, sleeps, dateLabels, sky
   const finale = Boolean(byN.get(11)?.shipped_at);
   const night = sky.phase === "night" || sky.phase === "dusk";
   const onSky = night ? "text-paper" : "text-line";
+  const todayRow = todayDoor != null ? byN.get(todayDoor) : undefined;
+  const todayOpen = todayRow != null && doorState(todayRow, finale) !== "locked";
 
   // ---- intro: draw the building once per session at full speed, quickly after that ----
   const [intro, setIntro] = useState<"full" | "fast" | null>(null);
@@ -216,14 +219,20 @@ export function BuildingScene({ initialDoors, todayDoor, sleeps, dateLabels, sky
         <h1 className="mt-1.5 font-serif text-4xl leading-none italic sm:text-6xl">
           birthday <span className="text-2xl not-italic sm:text-4xl">♡</span>
         </h1>
-        <p className="mt-3 font-sans text-[13px] leading-snug sm:text-sm">
-          {finale ? "11 of 11 · happy birthday, Jae" : `11 windows to Nov 28 · ${sleeps} ${sleeps === 1 ? "sleep" : "sleeps"} to go`}
+        <div className="mt-3 h-px w-40 bg-current opacity-40 sm:w-52" />
+        <p className="mt-2.5 font-sans text-[10.5px] font-medium tracking-[0.18em] uppercase sm:text-[11px]">
+          {finale ? "Eleven of eleven · happy birthday, Jae" : `Eleven windows · ${sleeps} ${sleeps === 1 ? "sleep" : "sleeps"} to go`}
         </p>
-        <p className="mt-0.5 font-sans text-xs capitalize opacity-70">
+        <p className="mt-1 font-sans text-[10px] tracking-[0.16em] uppercase opacity-65">
           Bangalore · {sky.phase}
           {sky.tempC != null && ` · ${sky.tempC}°C`}
           {sky.raining && " · raining"}
         </p>
+        {todayOpen && (
+          <Link href={`/door/${todayDoor}`} className="pointer-events-auto mt-3 inline-block font-serif text-[15px] italic underline-offset-4 hover:underline sm:text-base">
+            Today: no. {todayDoor}, {DOOR_META[todayDoor!].title.toLowerCase()} →
+          </Link>
+        )}
       </motion.header>
 
       {/* the building, with the camera on it */}
@@ -232,13 +241,19 @@ export function BuildingScene({ initialDoors, todayDoor, sleeps, dateLabels, sky
         <motion.div
           ref={boxRef}
           // container-type lets children size text in cqw (1% of the building's width)
-          className="relative aspect-[2/3] w-[min(calc(100vw-4.5rem),calc(84dvh*2/3))] [container-type:inline-size] md:w-[min(calc(100vw-1.5rem),calc(84dvh*2/3))]"
+          // phones: beside the elevator; tablets: short enough to clear the title block; wide screens: taller, there's room either side
+          className="relative aspect-[2/3] w-[min(calc(100vw-4.5rem),calc(84dvh*2/3))] [container-type:inline-size] md:w-[min(calc(100vw-1.5rem),calc((97dvh-250px)*2/3))] xl:w-[min(calc(100vw-1.5rem),calc(88dvh*2/3))]"
           animate={{ scale: camera.scale, y: camera.y }}
           transition={{ type: "spring", stiffness: 70, damping: 16, mass: 1.1 }}
           style={{ x: bX }}
         >
           {/* every push is a star; each day's pushes form that door's constellation (behind the building) */}
-          {intro && <Constellations pushes={pushes} fresh={fresh} isPhone={isPhone} phase={sky.phase} todayDoor={todayDoor} built={built} />}
+          {/* on phones the sky above the roof slides up under the title when the camera rides to a floor, so the stars step back until "all" */}
+          {intro && (
+            <div className="absolute inset-0 transition-opacity duration-700" style={{ opacity: isPhone && floor != null ? 0 : 1 }}>
+              <Constellations pushes={pushes} fresh={fresh} isPhone={isPhone} phase={sky.phase} todayDoor={todayDoor} built={built} />
+            </div>
+          )}
           {intro && <Facade fast={fast} night={sky.phase === "night"} />}
 
           {intro &&
@@ -287,12 +302,12 @@ export function BuildingScene({ initialDoors, todayDoor, sleeps, dateLabels, sky
 
       {/* controls */}
       <div className={`absolute bottom-4 left-4 z-40 flex items-center rounded-full border border-current/25 p-0.5 ${onSky}`}>
-        <ControlButton label={zoomed ? "Zoom out" : "Zoom in (bigger windows and text)"} pressed={zoomed} onClick={toggleZoom}>
+        <ControlButton label={zoomed ? "Zoom out" : "Zoom in (bigger windows and text)"} text="Zoom" pressed={zoomed} onClick={toggleZoom}>
           <circle cx="10.5" cy="10.5" r="6.5" />
           <path d="M15.5 15.5 L21 21 M7.5 10.5 H13.5" />
           {!zoomed && <path d="M10.5 7.5 V13.5" />}
         </ControlButton>
-        <ControlButton label={soundOn ? "Sound on" : "Sound off"} pressed={soundOn} onClick={toggleSound}>
+        <ControlButton label={soundOn ? "Sound on" : "Sound off"} text="Sound" pressed={soundOn} onClick={toggleSound}>
           <path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" />
           {soundOn ? <path d="M16 9 C18 11 18 13 16 15 M18.5 6.5 C22 10 22 14 18.5 17.5" /> : <path d="M17 9 L22 14 M22 9 L17 14" />}
         </ControlButton>
@@ -306,12 +321,12 @@ export function BuildingScene({ initialDoors, todayDoor, sleeps, dateLabels, sky
       <AnimatePresence>
         {built && (
           <motion.p
-            className={`pointer-events-none absolute right-8 bottom-6 z-30 hidden max-w-56 text-right font-sans text-xs tracking-wide md:block ${onSky}`}
+            className={`pointer-events-none absolute inset-x-0 bottom-[0.6dvh] z-30 hidden text-center font-serif text-sm italic md:block ${onSky}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: [0, 0.85, 0.85, 0] }}
             transition={{ duration: 7, times: [0, 0.1, 0.8, 1] }}
           >
-            Hover a window to peek · click to step inside
+            hover a window to peek, click to step inside
           </motion.p>
         )}
       </AnimatePresence>
@@ -382,7 +397,7 @@ function PeekCard({ peek }: { peek: Peek }) {
   );
 }
 
-function ControlButton({ label, pressed, onClick, children }: { label: string; pressed: boolean; onClick: () => void; children: React.ReactNode }) {
+function ControlButton({ label, text, pressed, onClick, children }: { label: string; text?: string; pressed: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       type="button"
@@ -390,11 +405,12 @@ function ControlButton({ label, pressed, onClick, children }: { label: string; p
       aria-pressed={pressed}
       title={label}
       onClick={onClick}
-      className={`flex size-9 items-center justify-center rounded-full transition-colors outline-none hover:bg-current/10 focus-visible:ring-2 focus-visible:ring-current/50 ${pressed ? "bg-current/15" : ""}`}
+      className={`flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-full px-2 transition-colors outline-none hover:bg-current/10 focus-visible:ring-2 focus-visible:ring-current/50 md:px-3 ${pressed ? "bg-current/15" : ""}`}
     >
       <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         {children}
       </svg>
+      {text && <span className="hidden font-sans text-[10px] font-medium tracking-[0.16em] uppercase md:inline">{text}</span>}
     </button>
   );
 }

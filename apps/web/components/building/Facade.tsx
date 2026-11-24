@@ -1,10 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { VIEW_H, VIEW_W, awningStripes, facadeStrokes } from "@/lib/building";
+import { VIEW_H, VIEW_W, awningStripes, buntingFlags, facadeDetails, facadeStrokes } from "@/lib/building";
 
 const STROKES = facadeStrokes();
 const STRIPES = awningStripes();
+const DETAILS = facadeDetails();
+const FLAGS = buntingFlags();
 
 /**
  * The building drawing itself. Each stroke animates `pathLength` 0 → 1 (the
@@ -40,6 +42,8 @@ export function Facade({ fast, night }: { fast: boolean; night: boolean }) {
       {STRIPES.map((d, i) => (
         <motion.path key={d} d={d} fill="var(--color-line)" initial={{ opacity: 0 }} animate={{ opacity: 0.16 }} transition={{ delay: total * 0.75 + i * 0.03 }} />
       ))}
+      {/* the shop window glows at night */}
+      {night && <motion.path d="M296 600 H420 V670 H296 Z" fill="#FBD99A" initial={{ opacity: 0 }} animate={{ opacity: 0.45 }} transition={{ delay: total + 0.4, duration: 0.8 }} />}
       <g fill="none" stroke="var(--color-line)" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
         {STROKES.map((d, i) => (
           <motion.path
@@ -55,6 +59,22 @@ export function Facade({ fast, night }: { fast: boolean; night: boolean }) {
           />
         ))}
       </g>
+      {/* the finer trim and the faint stucco, once the outline has been drawn */}
+      <motion.g
+        fill="none"
+        stroke="var(--color-line)"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8, delay: total * 0.85 }}
+      >
+        <path d={DETAILS.texture.join(" ")} strokeWidth={0.7} opacity={0.14} vectorEffect="non-scaling-stroke" />
+        <path d={DETAILS.trim.join(" ")} strokeWidth={1} opacity={0.85} vectorEffect="non-scaling-stroke" />
+        {FLAGS.map((d, i) => (
+          <path key={d} d={d} fill={i % 2 ? "rgba(229,143,168,.4)" : "rgba(242,196,90,.45)"} stroke="none" />
+        ))}
+      </motion.g>
       <motion.text
         x="358"
         y="694"
@@ -113,7 +133,10 @@ export function Foreground({ lit, fast }: { lit: boolean; fast: boolean }) {
           <stop offset="100%" stopColor="#FFE9B8" stopOpacity="0" />
         </radialGradient>
       </defs>
-      {lit && <motion.circle cx="-26" cy="520" r="70" fill="url(#lampGlow)" className="lamp-flicker" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: fast ? 0.6 : 2.2, duration: 0.8 }} />}
+      {lit &&
+        [-26, 566].map((x) => (
+          <motion.circle key={x} cx={x} cy="520" r="70" fill="url(#lampGlow)" className="lamp-flicker" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: fast ? 0.6 : 2.2, duration: 0.8 }} />
+        ))}
       <motion.g
         fill="none"
         stroke="var(--color-line)"
@@ -127,11 +150,22 @@ export function Foreground({ lit, fast }: { lit: boolean; fast: boolean }) {
         {/* lamp post and bench now stand on the pavement (y = 708) */}
         <path d="M-26 708 V540 M-34 708 H-18 M-26 540 C-26 528 -14 524 -10 532" vectorEffect="non-scaling-stroke" />
         <path d="M-40 520 H-12 L-16 540 H-36 Z M-30 520 L-26 512 L-22 520" fill={lit ? "#FFE9B8" : "var(--color-paper)"} vectorEffect="non-scaling-stroke" />
+        {/* a second lamp on the far side, facing the first */}
+        <path d="M566 708 V540 M558 708 H574 M566 540 C566 528 554 524 550 532" vectorEffect="non-scaling-stroke" />
+        <path d="M552 520 H580 L576 540 H556 Z M562 520 L566 512 L570 520" fill={lit ? "#FFE9B8" : "var(--color-paper)"} vectorEffect="non-scaling-stroke" />
+        {/* planters at the kerb, a rosemary and a lavender */}
+        {[-80, 620].map((x) => (
+          <g key={x}>
+            <path d={`M${x - 14} 708 L${x - 17} 690 H${x + 17} L${x + 14} 708 Z M${x - 17} 694 H${x + 17}`} fill="var(--color-paper)" vectorEffect="non-scaling-stroke" />
+            <path d={`M${x} 690 C${x - 2} 676 ${x - 8} 668 ${x - 12} 664 M${x} 690 C${x + 1} 674 ${x + 2} 666 ${x + 1} 658 M${x} 690 C${x + 3} 678 ${x + 9} 670 ${x + 13} 666 M${x - 7} 690 C${x - 9} 682 ${x - 14} 678 ${x - 18} 676 M${x + 7} 690 C${x + 9} 682 ${x + 14} 679 ${x + 18} 678`} vectorEffect="non-scaling-stroke" />
+          </g>
+        ))}
         <path d="M470 686 H530 M476 686 V708 M524 686 V708 M470 672 H530 V686 M472 672 V656 H528 V672" fill="var(--color-paper)" vectorEffect="non-scaling-stroke" />
       </motion.g>
       {/* invisible ledges for Mochi: the bench seat and the lamp's cap */}
       <rect data-mochi-platform="bench" x={470} y={672} width={60} height={1} fill="none" />
       <rect data-mochi-platform="lamp" x={-40} y={512} width={28} height={1} fill="none" />
+      <rect data-mochi-platform="far lamp" x={552} y={512} width={28} height={1} fill="none" />
     </svg>
   );
 }
