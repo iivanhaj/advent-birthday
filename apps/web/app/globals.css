@@ -370,3 +370,255 @@ html {
   .surprise [data-step] { transform: none; }
   .surprise-actions { animation: none; }
 }
+
+/* ---- door 8: the holographic card ---- */
+/* --px, --py: where the light is (0…1), --pd: how far from centre; set every frame by HoloCard */
+.holo-stage {
+  --px: 0.5;
+  --py: 0.5;
+  --pd: 0;
+  perspective: 1100px;
+}
+.holo-slab {
+  position: relative;
+  width: min(300px, 82vw);
+  padding: 10px 10px 13px;
+  border-radius: 14px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.5) 45%, rgba(255, 255, 255, 0.82));
+  box-shadow: 0 0 0 1px rgba(158, 59, 76, 0.28) inset, 0 0 0 4px rgba(255, 255, 255, 0.35) inset, 0 26px 50px -24px rgba(78, 30, 40, 0.5);
+  transform: rotateY(calc((var(--px) - 0.5) * 22deg)) rotateX(calc((0.5 - var(--py)) * 22deg));
+  transform-style: preserve-3d;
+}
+.holo-label {
+  position: relative;
+  display: grid;
+  grid-template-columns: 40px 1fr 50px;
+  gap: 7px;
+  align-items: center;
+  padding: 6px 7px;
+  border-radius: 4px;
+  background: #f7eedf;
+  border: 1px solid rgba(158, 59, 76, 0.45);
+  font-family: var(--font-inter), sans-serif;
+  font-size: 7px;
+  line-height: 1.45;
+  color: #6b1d2c;
+}
+.holo-logo {
+  height: 40px;
+  border-radius: 3px;
+  border: 1px solid rgba(158, 59, 76, 0.6);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-playfair), serif;
+  font-style: italic;
+  font-size: 15px;
+  color: #9e3b4c;
+}
+.holo-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 8px;
+  margin-top: 2px;
+  font-size: 6.4px;
+  opacity: 0.85;
+}
+.holo-stats b {
+  float: right;
+}
+.holo-grade {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-left: 1px solid rgba(158, 59, 76, 0.3);
+  font-family: var(--font-playfair), serif;
+  font-style: italic;
+}
+.holo-grade b {
+  font-size: 24px;
+  line-height: 1;
+  font-weight: 400;
+}
+.holo-grade span:last-child {
+  font-family: var(--font-inter), sans-serif;
+  font-style: normal;
+  font-size: 5.6px;
+  letter-spacing: 0.05em;
+}
+/* a little oval hologram sticker, the kind that proves a slab is genuine */
+.holo-seal {
+  position: absolute;
+  right: 58px;
+  bottom: 5px;
+  width: 20px;
+  height: 12px;
+  border-radius: 50%;
+  background: conic-gradient(from calc(var(--px) * 360deg), #ffc2d6, #fff0b3, #bff3de, #c2dbff, #e3c8ff, #ffc2d6);
+  box-shadow: 0 0 0 0.6px rgba(158, 59, 76, 0.5);
+}
+.holo-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  margin-top: 9px;
+  aspect-ratio: 264 / 368;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.3, 1.25, 0.5, 1);
+  cursor: pointer;
+  border-radius: 11px;
+}
+.holo-card.is-flipped {
+  transform: rotateY(180deg);
+}
+.holo-front,
+.holo-back {
+  position: absolute;
+  inset: 0;
+  border-radius: 11px;
+  overflow: hidden;
+  backface-visibility: hidden;
+}
+.holo-back {
+  transform: rotateY(180deg);
+}
+/* the gilt edge: brushed gold whose highlight slides with the light */
+.holo-front {
+  padding: 5px;
+  background: linear-gradient(calc(115deg + (var(--px) - 0.5) * 40deg), #e6d29e, #b98f45 28%, #f6e7bd calc(40% + var(--px) * 20%), #b38841 72%, #ead39a);
+}
+.holo-face {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  border-radius: 7px;
+  background: #fdf7f3;
+  color: #9e3b4c;
+  display: flex;
+  flex-direction: column;
+}
+.holo-rule {
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(158, 59, 76, 0.6);
+  border-radius: 5px;
+  pointer-events: none;
+}
+.holo-rule::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 0.5px solid rgba(158, 59, 76, 0.35);
+  border-radius: 4px;
+}
+.holo-window {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 8px 11px 6px;
+  border: 1px solid #9e3b4c;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #2a2449;
+}
+.holo-element {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1px solid #e9cf8f;
+}
+.holo-move {
+  margin: 0 11px 5px;
+  padding: 4px 8px 5px;
+  border-radius: 3px;
+  background: #fffaf6;
+  border: 0.8px solid rgba(158, 59, 76, 0.55);
+}
+.holo-traits {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 1px 11px 5px;
+  border-block: 0.8px solid rgba(158, 59, 76, 0.45);
+  font-family: var(--font-playfair), serif;
+  font-style: italic;
+  font-size: 7.2px;
+  text-align: left;
+}
+.holo-traits span {
+  padding: 3px 5px;
+}
+.holo-traits span + span {
+  border-left: 0.8px solid rgba(158, 59, 76, 0.45);
+}
+.holo-traits b {
+  display: block;
+  font-family: var(--font-inter), sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 5.6px;
+  letter-spacing: 0.18em;
+  opacity: 0.8;
+}
+/* foil: a pastel spectrum that slides across as the light moves, plus a pearl layer going the other way */
+.holo-foil,
+.holo-window-foil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: color-dodge;
+  background:
+    repeating-linear-gradient(110deg, transparent 0%, #ffb8d2 6%, #ffe6a0 11%, #b6f0dc 16%, #b8d6ff 21%, #e0c2ff 26%, transparent 33%),
+    conic-gradient(from 40deg at calc(var(--px) * 100%) calc(var(--py) * 100%), #ffe9f1, #fff6dc, #e3f1ff, #f1e6ff, #ffe9f1);
+  background-size: 260% 260%, 100% 100%;
+  background-position: calc(var(--px) * 100%) calc(var(--py) * 100%), 0 0;
+  opacity: calc(0.35 + var(--pd) * 0.55);
+}
+.holo-window-foil {
+  z-index: 1;
+  opacity: calc(0.18 + var(--pd) * 0.45);
+}
+.holo-glitter {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background-image: radial-gradient(circle, #fff6dc 0 0.8px, transparent 1.3px), radial-gradient(circle, #ffd6e6 0 0.6px, transparent 1.1px);
+  background-size: 13px 15px, 21px 25px;
+  background-position: calc(var(--px) * 30px) calc(var(--py) * 30px), calc(var(--px) * -20px) calc(var(--py) * 24px);
+  opacity: calc(0.25 + var(--pd) * 0.6);
+  -webkit-mask-image: radial-gradient(circle at calc(var(--px) * 100%) calc(var(--py) * 100%), #000 0%, transparent 60%);
+  mask-image: radial-gradient(circle at calc(var(--px) * 100%) calc(var(--py) * 100%), #000 0%, transparent 60%);
+}
+.holo-glare {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: 11px;
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+  background: radial-gradient(circle at calc(var(--px) * 100%) calc(var(--py) * 100%), rgba(255, 246, 230, 0.9), transparent 45%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .holo-card {
+    transition: none;
+  }
+}
+/* bigger on larger screens: scaled as a picture inside a box sized for it, so the layout around it stays exact */
+.holo-size {
+  width: min(300px, 82vw);
+}
+@media (min-width: 768px) {
+  .holo-size {
+    width: 390px;
+    height: 630px;
+  }
+  .holo-size > .holo-stage {
+    transform: scale(1.3);
+    transform-origin: top left;
+  }
+}

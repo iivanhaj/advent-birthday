@@ -11,6 +11,8 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const caveat = Caveat({ subsets: ["latin"], variable: "--font-caveat" });
 
 export const metadata: Metadata = {
+  // share images (door 8's cards) need an absolute address
+  metadataBase: new URL("https://advent-birthday-hng9.vercel.app"),
   title: "birthday ♡ advent calendar",
   description: "11 windows to Nov 28: one tiny build a day.",
 };

@@ -13,6 +13,8 @@ import { CommitPond } from "./CommitPond";
 import { BloomPage } from "./BloomPage";
 import { BoothPage } from "./BoothPage";
 import { FireflyPage } from "./FireflyPage";
+import { CardPage } from "./CardPage";
+import { makeCard } from "@/lib/card/card";
 import { getSky } from "@/lib/sky";
 import { boothSky } from "@/lib/booth/strip";
 
@@ -57,16 +59,26 @@ const LEARNED: Record<number, string[]> = {
 
 export const dynamic = "force-dynamic";
 
-type Params = { params: Promise<{ n: string }>; searchParams: Promise<{ preview?: string; sky?: string; rain?: string }> };
+type Params = { params: Promise<{ n: string }>; searchParams: Promise<{ preview?: string; sky?: string; rain?: string; name?: string; b?: string; t?: string }> };
 
 function parseDoor(raw: string): number | null {
   const n = Number(raw);
   return Number.isInteger(n) && n >= 1 && n <= DOOR_COUNT ? n : null;
 }
 
-export async function generateMetadata({ params }: Params): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Params): Promise<Metadata> {
   const n = parseDoor((await params).n);
-  return { title: n ? `no. ${n} · ${DOOR_META[n].title}` : "Window not found" };
+  const title = n ? `no. ${n} · ${DOOR_META[n].title}` : "Window not found";
+  // door 8: a shared card link previews that card
+  if (n === 8 && isDoorReachable(8)) {
+    const q = (await searchParams) as Record<string, string | undefined>;
+    const card = q.b ? makeCard({ name: q.name ?? "", birthday: q.b, type: q.t ?? "" }, new Date()) : null;
+    if (card) {
+      const image = `/api/card?name=${encodeURIComponent(card.name)}&b=${q.b}&t=${card.type}`;
+      return { title: `${card.name}'s birthday card`, openGraph: { title: `${card.name}'s birthday card`, images: [{ url: image, width: 1200, height: 630 }] }, twitter: { card: "summary_large_image", images: [image] } };
+    }
+  }
+  return { title };
 }
 
 export default async function DoorPage({ params, searchParams }: Params) {
@@ -146,6 +158,15 @@ export default async function DoorPage({ params, searchParams }: Params) {
     return (
       <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
         <BoothPage sky={boothSky(sky.phase, sky.raining)} tempC={sky.tempC} />
+      </DoorFrame>
+    );
+  }
+
+  // Door 8: the holographic card.
+  if (n === 8) {
+    return (
+      <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
+        <CardPage today={istDate()} />
       </DoorFrame>
     );
   }
