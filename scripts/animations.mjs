@@ -377,6 +377,42 @@ await cast("carousel", {
   },
 });
 
+// 9. The holographic card: the foil catching the light, a new birthday, then the card turned over.
+await cast("card", {
+  path: "/door/8",
+  w: 1280,
+  h: 960,
+  seconds: 13,
+  scale: 0.5,
+  minFrameMs: 100,
+  setup: async () => {
+    await js(`(() => { const s = document.querySelector('section[aria-label="The holographic card"]'); scrollTo(0, s.getBoundingClientRect().top + scrollY - 10); })()`);
+    await sleep(1500);
+  },
+  clip: async () => {
+    const r = await rect('section[aria-label="The holographic card"]');
+    return { x: r.x, y: r.y, width: r.w, height: Math.min(r.h, 960 - r.y) };
+  },
+  script: async () => {
+    // sweep the "mouse" across the card so the foil and glare move
+    const sweep = async (from, to, ms) => {
+      const steps = Math.round(ms / 60);
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps, x = from[0] + (to[0] - from[0]) * t, y = from[1] + (to[1] - from[1]) * t;
+        await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
+        await sleep(60);
+      }
+    };
+    const c = await rect(".holo-size");
+    await sweep([c.x, c.y + c.h * 0.3], [c.x + c.w, c.y + c.h * 0.6], 2600);
+    await js(`(() => { const i = document.getElementById('card-birthday'); const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; set.call(i, '1999-05-14'); i.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+    await sweep([c.x + c.w, c.y + c.h * 0.6], [c.x, c.y + c.h * 0.4], 2600);
+    await js(`document.querySelector('.holo-card').click()`);
+    await sleep(2200);
+    await js(`document.querySelector('.holo-card').click()`);
+  },
+});
+
 ws.close();
 chrome.kill();
 console.log(`Saved to ${OUT}`);

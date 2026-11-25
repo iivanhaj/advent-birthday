@@ -55,6 +55,11 @@ const LEARNED: Record<number, string[]> = {
     "a nearest-neighbour loop tidied by 2-opt reversals puts songs that sound alike next to each other",
     "a music-box note is a sine and two quiet overtones that fade fast; seed the tune with the song ID and every song gets its own",
   ],
+  8: [
+    "the gyroscope arrives as DeviceOrientationEvent (beta front-to-back, gamma side-to-side), and on iPhones only a tap can ask for it",
+    "a blend mode on a child flattens a 3D transform, so every foil and glare layer has to live inside the face it shines on, or the flip breaks",
+    "Satori turns JSX into a PNG on the server, so a shared link can preview the exact card it was made from",
+  ],
 };
 
 export const dynamic = "force-dynamic";

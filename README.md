@@ -13,7 +13,7 @@
 <br/>
 
 [![Live on Vercel](https://img.shields.io/badge/live-Vercel-9E3B4C?style=flat-square&logo=vercel&logoColor=white)](https://advent-birthday-hng9.vercel.app)
-![Doors open](https://img.shields.io/badge/doors_open-8_of_12-9E3B4C?style=flat-square)
+![Doors open](https://img.shields.io/badge/doors_open-9_of_12-9E3B4C?style=flat-square)
 ![Next.js](https://img.shields.io/badge/Next.js_16-000?style=flat-square&logo=nextdotjs)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase_Realtime-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
@@ -54,6 +54,8 @@ kibble drops for Mochi, the cat who lives here.
   guestbook.
 - **Play the carousel.** On door 7, pick a mood, turn the carousel until a
   song you like is at the front, and let the music box wind it up.
+- **Print your birthday card.** On door 8, put in a birthday and tilt your
+  phone: the foil catches the light. Turn it over, save it, or share the link.
 - **Come back at night.** The sky is Bangalore's real sky, the lamps come on in
   the windows that have been worked in, and tomorrow there's a new door.
 
@@ -469,6 +471,57 @@ longer than the playlist's own order.
 
 ---
 
+## Door 8 · The holographic card
+
+<p align="center"><img src="docs/animations/card.gif" width="512" alt="A birthday trading card in a clear graded slab: a cream card in rose line art with a gilt edge, a night-sky window holding a gold star chart of the Sagittarius constellation over a painted chrysanthemum bouquet; rainbow foil and glare slide across it as the light moves, the birthday changes and the painting becomes a different sign and flower, then the card flips to an engraved guilloche back"></p>
+
+**What you're seeing:** a collectible card made from a birthday, sealed in
+a graded slab. [Put in a name and a date](https://advent-birthday-hng9.vercel.app/door/8)
+and the press finds the star sign, charts its constellation in gold, paints
+that month's birth flower beneath it, and works out the rest: days on earth as
+HP, the weekday you were born as your talent, your sign's signature move.
+Move the mouse or tilt your phone and the foil catches the light; tap the card
+to turn it over.
+
+**How it works**
+
+- **One light, many layers.** The tilt, the gilt edge's highlight, two foil
+  layers, the glitter and the glare all read two CSS variables: where the
+  light is. They're eased every frame and written straight to the element, so
+  nothing re-renders while the card moves.
+- **The phone's gyroscope.** On phones the light comes from
+  `DeviceOrientationEvent`: `gamma` moves it left and right, `beta` up and
+  down. iPhones only hand it over after a tap, so the page asks with a small
+  "tilt with your phone" link.
+- **Painted in code, per month.** Each birth flower is a recipe (how many
+  petals, how long and wide, the tip, the layers, two colours) drawn as Bézier
+  petals that shade from the heart outwards. Each sign's stars carry a
+  brightness, so the constellation reads like a real one.
+- **Star signs, tested at every edge.** A sign is the one whose season began
+  on or before your day, so the code needs only twelve start days. A test walks
+  every day of a leap year and checks the signs come out in order, each one
+  starting on its own day and not the day before.
+- **The same card everywhere.** Nothing is random: a card is a pure function
+  of name, birthday and type, hashed for its stats and serial. A shared link
+  carries just those three, and its preview image is drawn on the server by
+  Satori from the same painting, so the link previews the very card.
+- **The engraved back** is a guilloche, the looping lines on banknotes, made
+  of three hypotrochoids round a medallion.
+
+<details>
+<summary><b>The interesting bit: why the flip kept breaking</b></summary>
+
+A card flip is two faces back to back inside a parent with
+`transform-style: preserve-3d`, each with `backface-visibility: hidden`. It
+worked until the glare went on top: any child with a `mix-blend-mode` makes
+the browser composite its parent as one flat picture, and a flat picture has
+no back face to hide. The front showed through, mirrored. The fix is
+structural, not a tweak: every blended layer (foil, glitter, glare) lives
+inside the face it shines on, so the 3D parent only ever holds two plain faces.
+</details>
+
+---
+
 ## More of the building
 
 <table>
@@ -508,7 +561,7 @@ learn.
 | 5 | [The infinite bloom](https://advent-birthday-hng9.vercel.app/door/5) | self-similarity, SDF shaders, Rust → WebAssembly | open |
 | 6 | [The photo booth](https://advent-birthday-hng9.vercel.app/door/6) | GPU image pipeline, print-size canvas, rate limiting | open |
 | 7 | [The firefly carousel](https://advent-birthday-hng9.vercel.app/door/7) | balanced k-means, 2-opt, three.js line art, Web Audio | open |
-| 8 | Holographic card | sensor APIs, OG images | shuttered |
+| 8 | [The holographic card](https://advent-birthday-hng9.vercel.app/door/8) | device orientation, CSS foil, Satori share images | open |
 | 9 | Time-locked letter | applied cryptography | shuttered |
 | 10 | The game | ECS, deterministic replays | shuttered |
 | 11 | Blow out the candles | signal processing | shuttered |
@@ -564,7 +617,7 @@ flowchart LR
 | **GPU** | three.js line art · WebGL2 wave-equation water · signed-distance-field shaders · WebGPU compute and instanced rendering (WGSL) |
 | **Rust** | a tiny Rust crate compiled to WebAssembly (no wasm-bindgen), raced against TypeScript |
 | **Backend** | Next.js route handlers · Supabase (Postgres, Row Level Security, Realtime) |
-| **Data** | GitHub push webhooks · Open-Meteo weather API · Spotify embed (iFrame API) |
+| **Data** | GitHub push webhooks · Open-Meteo weather API · Spotify embed (iFrame API) · device orientation · Satori share images (`next/og`) |
 | **Hosting** | Vercel (deploys on every push to `main`) |
 | **Tooling** | pnpm workspaces · `node:test` · headless-Chrome screenshots and GIFs |
 
@@ -581,12 +634,14 @@ apps/web/                 the Next.js site
   components/bloom/       the infinite bloom: SDF renderer and page
   components/booth/       the photo booth: room, GPU darkroom, strip painter, guestbook
   components/firefly/     the 3D line-art carousel and the music box
+  components/card/        the holo card, its painted window and engraved back
   lib/mochi/              her statechart and world model (A*, jump arcs), with tests
   lib/records/            the seeded record painter and the song list, with tests
   lib/pond/               flocking, spatial hash and koi-from-pushes, with tests
   lib/bloom/              self-similarity maths and the tree walk, with tests
   lib/booth/              films, the 2 × 6 strip and guestbook rules, with tests
   lib/firefly/            the songs' moods, clustering and ring order, with tests
+  lib/card/               star signs, birth flowers and the card's numbers, with tests
 wasm/bloom/               the same tree walk in Rust (pnpm build:wasm)
   lib/                    unlock rules (IST), sky, constellations, file kinds
 packages/garden-ui/       shared design tokens, motion presets, DoorFrame
