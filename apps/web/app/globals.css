@@ -336,3 +336,37 @@ html {
 @media (prefers-reduced-motion: reduce) {
   .booth-bulb, .booth-curtain, .booth-feed, .booth-twinkle, .booth-rain, .booth-spin, .booth-develop { animation: none; }
 }
+
+/* ---- the 28th: the lid lifts, then each piece drops into place ---- */
+.surprise [data-lid] {
+  transform-box: view-box;
+  transform-origin: 50% 0%;
+  transition: transform 1.1s cubic-bezier(0.5, -0.2, 0.4, 1), opacity 0.6s 0.6s;
+}
+.surprise.is-open [data-lid] {
+  transform: translateY(-115%) rotate(-6deg);
+  opacity: 0;
+}
+.surprise [data-step] {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+  transform: translateY(-60px) scale(1.12) rotate(-4deg);
+}
+.surprise.is-open [data-step] {
+  opacity: 1;
+  transform: none;
+  transition: transform 0.8s cubic-bezier(0.2, 1.35, 0.4, 1), opacity 0.35s;
+  transition-delay: calc(0.8s + var(--i, 0) * 0.14s);
+}
+.surprise-actions {
+  animation: rise-in 0.6s 3.6s both;
+}
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(12px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .surprise [data-lid], .surprise.is-open [data-step] { transition: opacity 0.4s; }
+  .surprise [data-step] { transform: none; }
+  .surprise-actions { animation: none; }
+}
