@@ -14,6 +14,8 @@ export const STEP = 1 / 60;
 export const VIEW_H = 360;
 export const CAT_X = 130; // where Mochi stays on screen, in world pixels from the left edge
 export const CAT_W = 34;
+/** How far below a roof's top she can still scramble up onto it. */
+export const LEDGE = 14;
 
 export const PHYS = {
   gravity: 0.62,
@@ -171,7 +173,9 @@ export function step(world: World, s: RunState, input: Input): RunState {
 
   const roof = roofAt(world, wx);
   const top = roof ? VIEW_H - roof.h : Infinity;
-  if (roof && c.vy >= 0 && before <= top + 1 && c.y >= top) {
+  // a ledge grab: arriving at a roof's edge just below its top, she scrambles up instead of bumping into it
+  const grab = roof && !c.onGround && c.y > top && c.y - top <= LEDGE && before - top <= LEDGE + Math.abs(c.vy);
+  if (roof && ((c.vy >= 0 && before <= top + 1 && c.y >= top) || grab)) {
     // landed, perhaps on a bouncy awning
     c.y = top;
     const aw = roof.awning;

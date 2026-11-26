@@ -39,7 +39,7 @@ export const DOOR_META: Record<number, { title: string }> = {
   6: { title: "The photo booth" },
   7: { title: "Firefly music" },
   8: { title: "Holographic card" },
-  9: { title: "Time-locked letter" },
+  9: { title: "Mochi's rooftop run" },
   10: { title: "Jae: The Game" },
   11: { title: "Blow out the candles" },
 };

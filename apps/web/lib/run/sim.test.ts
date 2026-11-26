@@ -75,6 +75,17 @@ test("a replay round-trips and plays back to exactly the same score", () => {
   assert.equal(decodeReplay("nonsense"), null);
 });
 
+test("arriving just under a roof's top, she scrambles up instead of hitting the wall", () => {
+  const w: World = { roofs: [{ x: -200, w: 400, h: 100, deco: "none", awning: null, style: 0 }, { x: 260, w: 400, h: 130, deco: "none", awning: null, style: 0 }], items: [], birds: [] };
+  const s = startState(w);
+  s.dist = 260 - CAT_X - 2;
+  s.cat = { ...s.cat, y: VIEW_H - 130 + 8, vy: 2, onGround: false };
+  step(w, s, { held: false, pressed: false });
+  assert.equal(s.over, null);
+  assert.equal(s.cat.y, VIEW_H - 130);
+  assert.ok(s.cat.onGround);
+});
+
 test("stars sit above the roofs, within reach", () => {
   for (const it of world.items.slice(0, 200)) {
     assert.ok(it.y < VIEW_H - 50 && it.y > 0, `item ${it.id} at ${it.y}`);

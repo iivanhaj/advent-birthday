@@ -10,8 +10,9 @@ import { Mochi } from "@/components/mochi/Mochi";
  * the end state. One switch instead of checking in every component.
  */
 export function Providers({ children }: { children: React.ReactNode }) {
-  // one page is a full-screen picture of its own; Mochi sits that one out
-  const away = usePathname() === "/surprise";
+  // Mochi sits out the full-screen present, and door 9, where she's busy running across the rooftops
+  const path = usePathname();
+  const away = path === "/surprise" || path === "/door/9";
   return (
     <MotionConfig reducedMotion="user">
       {children}

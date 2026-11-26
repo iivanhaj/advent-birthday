@@ -14,6 +14,7 @@ import { BloomPage } from "./BloomPage";
 import { BoothPage } from "./BoothPage";
 import { FireflyPage } from "./FireflyPage";
 import { CardPage } from "./CardPage";
+import { RunPage } from "./RunPage";
 import { makeCard } from "@/lib/card/card";
 import { getSky } from "@/lib/sky";
 import { boothSky } from "@/lib/booth/strip";
@@ -59,6 +60,11 @@ const LEARNED: Record<number, string[]> = {
     "the gyroscope arrives as DeviceOrientationEvent (beta front-to-back, gamma side-to-side), and on iPhones only a tap can ask for it",
     "a blend mode on a child flattens a 3D transform, so every foil and glare layer has to live inside the face it shines on, or the flip breaks",
     "Satori turns JSX into a PNG on the server, so a shared link can preview the exact card it was made from",
+  ],
+  9: [
+    "a fixed-timestep loop spends real time in whole 1/60 s steps, so the game plays the same at any refresh rate and a replay is just the frames where the button went down and up",
+    "a robot player in the tests proves every day's course can be finished, and it caught an awning that launched Mochi straight into a wall",
+    "a few frames of grace before an edge (coyote time) and before landing (a jump buffer) make jumps feel fair",
   ],
 };
 
@@ -163,6 +169,15 @@ export default async function DoorPage({ params, searchParams }: Params) {
     return (
       <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
         <BoothPage sky={boothSky(sky.phase, sky.raining)} tempC={sky.tempC} />
+      </DoorFrame>
+    );
+  }
+
+  // Door 9: Mochi's rooftop run.
+  if (n === 9) {
+    return (
+      <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
+        <RunPage today={istDate()} />
       </DoorFrame>
     );
   }
