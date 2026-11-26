@@ -413,6 +413,24 @@ await cast("card", {
   },
 });
 
+// 10. Mochi's rooftop run: a replay link plays a whole run by itself (it's just the frames where the button moved).
+await cast("run", {
+  path: "/door/9#r=2026-11-26~36.q.1p.q.1e.9.2g.9.30.9.2w.q.2c.9.1z.9",
+  w: 1280,
+  h: 900,
+  seconds: 12,
+  scale: 0.5,
+  minFrameMs: 90,
+  setup: async () => {
+    await js(`(() => { const s = document.querySelector('section[aria-label="Mochi\\'s rooftop run"]'); scrollTo(0, s.getBoundingClientRect().top + scrollY - 10); })()`);
+    await sleep(300);
+  },
+  clip: async () => {
+    const r = await rect(`section[aria-label="Mochi's rooftop run"]`);
+    return { x: r.x, y: r.y, width: r.w, height: r.h };
+  },
+});
+
 ws.close();
 chrome.kill();
 console.log(`Saved to ${OUT}`);

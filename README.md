@@ -13,7 +13,7 @@
 <br/>
 
 [![Live on Vercel](https://img.shields.io/badge/live-Vercel-9E3B4C?style=flat-square&logo=vercel&logoColor=white)](https://advent-birthday-hng9.vercel.app)
-![Doors open](https://img.shields.io/badge/doors_open-9_of_12-9E3B4C?style=flat-square)
+![Doors open](https://img.shields.io/badge/doors_open-10_of_12-9E3B4C?style=flat-square)
 ![Next.js](https://img.shields.io/badge/Next.js_16-000?style=flat-square&logo=nextdotjs)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase_Realtime-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
@@ -56,6 +56,8 @@ kibble drops for Mochi, the cat who lives here.
   song you like is at the front, and let the music box wind it up.
 - **Print your birthday card.** On door 8, put in a birthday and tilt your
   phone: the foil catches the light. Turn it over, save it, or share the link.
+- **Run the rooftops.** On door 9, help Mochi leap across the roofs at dusk.
+  Everyone gets the same course each day; share your run and it replays exactly.
 - **Come back at night.** The sky is Bangalore's real sky, the lamps come on in
   the windows that have been worked in, and tomorrow there's a new door.
 
@@ -522,6 +524,53 @@ inside the face it shines on, so the 3D parent only ever holds two plain faces.
 
 ---
 
+## Door 9 · Mochi's rooftop run
+
+<p align="center"><img src="docs/animations/run.gif" width="512" alt="Mochi, a fine-line cat, runs and leaps across cream rooftops drawn in rose ink at dusk, past string lights, water tanks and potted plants, catching gold stars, with a lavender sky, a rising moon and a faint skyline scrolling slower behind"></p>
+
+**What you're seeing:** a small game starring Mochi, the cat who lives on
+this site. [She's slipped out onto the rooftops](https://advent-birthday-hng9.vercel.app/door/9)
+at dusk: tap (or press space) to jump, hold to leap further, catch the stars
+and the slices of cake, bounce off the striped awnings and mind the pigeons.
+The sky deepens into night the further she gets. Everyone runs the same
+rooftops today; tomorrow there are new ones. Finish a run and share it: the
+link plays it back, exactly.
+
+**How it works**
+
+- **The game is pure maths.** The world grows from a seed (today's date), and
+  the simulation moves in fixed 1/60 s steps using nothing but the button. So
+  the same day and the same presses always give the same run, on any screen.
+- **A fixed timestep.** The screen draws whenever it likes, but real time is
+  collected and spent in whole simulation steps, so a 60 Hz phone and a 144 Hz
+  monitor play identically.
+- **A replay is a list of frames.** Only the frames where the button went
+  down or up are kept, as gaps in base 36: a whole run fits in about fifty
+  characters after the `#` of a link. Playing it back is re-running the
+  simulation with those presses.
+- **Fair jumps.** A few frames of grace after running off an edge (coyote
+  time) and before landing (a jump buffer), and a scramble up onto a roof she
+  only just misses.
+- **Drawn like the building.** Canvas 2D in the site's rose line: a sky that
+  blends from dusk to night, a skyline and a row of houses moving at their own
+  fraction of her speed, lamplit windows, and Mochi built from the same shapes
+  as her sprite. The sounds are synthesised: each star's bell climbs a
+  pentatonic scale as you catch them in a row.
+
+<details>
+<summary><b>The interesting bit: a robot that plays every course</b></summary>
+
+A generated course is only fair if it can be finished, so the tests include
+a small robot player: at every roof edge it jumps, holding longer for a
+longer gap, the way a person would. It runs a week of daily courses for a
+minute each. It earned its keep at once: it found an awning that launched
+Mochi straight into the wall of a taller roof, and a short roof a full jump
+would overshoot. Now awnings only appear where the bounce lands safely, and
+roofs get roomier as she speeds up.
+</details>
+
+---
+
 ## More of the building
 
 <table>
@@ -562,7 +611,7 @@ learn.
 | 6 | [The photo booth](https://advent-birthday-hng9.vercel.app/door/6) | GPU image pipeline, print-size canvas, rate limiting | open |
 | 7 | [The firefly carousel](https://advent-birthday-hng9.vercel.app/door/7) | balanced k-means, 2-opt, three.js line art, Web Audio | open |
 | 8 | [The holographic card](https://advent-birthday-hng9.vercel.app/door/8) | device orientation, CSS foil, Satori share images | open |
-| 9 | Time-locked letter | applied cryptography | shuttered |
+| 9 | [Mochi's rooftop run](https://advent-birthday-hng9.vercel.app/door/9) | fixed-timestep game loop, seeded daily courses, replays | open |
 | 10 | The game | ECS, deterministic replays | shuttered |
 | 11 | Blow out the candles | signal processing | shuttered |
 
@@ -613,7 +662,7 @@ flowchart LR
 | | |
 |---|---|
 | **Frontend** | Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Framer Motion · hand-drawn SVG · Canvas 2D |
-| **Behaviour** | XState 5 statecharts · A\* pathfinding · projectile physics · boids with a spatial hash · balanced k-means and 2-opt · seeded PRNG (mulberry32) |
+| **Behaviour** | XState 5 statecharts · A\* pathfinding · projectile physics · boids with a spatial hash · balanced k-means and 2-opt · a fixed-timestep game loop with replays · seeded PRNG (mulberry32) |
 | **GPU** | three.js line art · WebGL2 wave-equation water · signed-distance-field shaders · WebGPU compute and instanced rendering (WGSL) |
 | **Rust** | a tiny Rust crate compiled to WebAssembly (no wasm-bindgen), raced against TypeScript |
 | **Backend** | Next.js route handlers · Supabase (Postgres, Row Level Security, Realtime) |
@@ -635,6 +684,7 @@ apps/web/                 the Next.js site
   components/booth/       the photo booth: room, GPU darkroom, strip painter, guestbook
   components/firefly/     the 3D line-art carousel and the music box
   components/card/        the holo card, its painted window and engraved back
+  components/run/         the rooftop run: canvas painter, game loop, sounds
   lib/mochi/              her statechart and world model (A*, jump arcs), with tests
   lib/records/            the seeded record painter and the song list, with tests
   lib/pond/               flocking, spatial hash and koi-from-pushes, with tests
@@ -642,6 +692,7 @@ apps/web/                 the Next.js site
   lib/booth/              films, the 2 × 6 strip and guestbook rules, with tests
   lib/firefly/            the songs' moods, clustering and ring order, with tests
   lib/card/               star signs, birth flowers and the card's numbers, with tests
+  lib/run/                the run's simulation, daily courses and replays, with tests
 wasm/bloom/               the same tree walk in Rust (pnpm build:wasm)
   lib/                    unlock rules (IST), sky, constellations, file kinds
 packages/garden-ui/       shared design tokens, motion presets, DoorFrame
