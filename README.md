@@ -13,7 +13,7 @@
 <br/>
 
 [![Live on Vercel](https://img.shields.io/badge/live-Vercel-9E3B4C?style=flat-square&logo=vercel&logoColor=white)](https://advent-birthday-hng9.vercel.app)
-![Doors open](https://img.shields.io/badge/doors_open-10_of_12-9E3B4C?style=flat-square)
+![Doors open](https://img.shields.io/badge/doors_open-11_of_12-9E3B4C?style=flat-square)
 ![Next.js](https://img.shields.io/badge/Next.js_16-000?style=flat-square&logo=nextdotjs)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase_Realtime-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
@@ -571,6 +571,27 @@ roofs get roomier as she speeds up.
 
 ---
 
+## Door 10 · Birthday eve
+
+<p align="center"><img src="docs/animations/eve.gif" width="640" alt="The building drawn in rose line on a starry night sky, with a countdown to midnight beside it; its windows light up one by one, each with a small pendant lamp in warm light"></p>
+
+**What you're seeing:** [the night before the birthday](https://advent-birthday-hng9.vercel.app/door/10).
+The building stands under the stars and its lamps come on one window at a
+time, from noon until the last one just before midnight, beside a countdown
+to the 28th. Tap a dark window if you can't wait.
+
+**How it works**
+
+- **One clock for everyone.** The number of lit windows is the fraction of
+  the day gone since noon in India, rounded down to a window, so every visitor
+  sees the same building at the same moment. The countdown is two timestamps
+  apart; `Date.parse` with an explicit `+05:30` needs no time-zone library.
+- **The same building.** The page draws the façade from the building's own
+  data (its strokes, trim and window shapes), so it's the very same drawing as
+  the home page, just at night.
+
+---
+
 ## More of the building
 
 <table>
@@ -612,7 +633,7 @@ learn.
 | 7 | [The firefly carousel](https://advent-birthday-hng9.vercel.app/door/7) | balanced k-means, 2-opt, three.js line art, Web Audio | open |
 | 8 | [The holographic card](https://advent-birthday-hng9.vercel.app/door/8) | device orientation, CSS foil, Satori share images | open |
 | 9 | [Mochi's rooftop run](https://advent-birthday-hng9.vercel.app/door/9) | fixed-timestep game loop, seeded daily courses, replays | open |
-| 10 | The game | ECS, deterministic replays | shuttered |
+| 10 | [Birthday eve](https://advent-birthday-hng9.vercel.app/door/10) | a shared clock, reusing the building's drawing data | open |
 | 11 | Blow out the candles | signal processing | shuttered |
 
 ## How a push travels

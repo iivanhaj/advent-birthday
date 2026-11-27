@@ -431,6 +431,23 @@ await cast("run", {
   },
 });
 
+// 11. Birthday eve: the lamps come on, and a tap lights the rest.
+await cast("eve", {
+  path: "/door/10",
+  w: 1280,
+  h: 800,
+  seconds: 7,
+  scale: 0.5,
+  minFrameMs: 110,
+  script: async () => {
+    await sleep(1200);
+    for (let i = 0; i < 11; i++) {
+      await js(`(() => { const g = [...document.querySelectorAll('svg[role="img"] g.cursor-pointer')]; g[Math.floor(g.length / 2)]?.dispatchEvent(new MouseEvent('click', { bubbles: true })); })()`);
+      await sleep(420);
+    }
+  },
+});
+
 ws.close();
 chrome.kill();
 console.log(`Saved to ${OUT}`);

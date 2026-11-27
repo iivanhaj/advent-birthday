@@ -15,6 +15,7 @@ import { BoothPage } from "./BoothPage";
 import { FireflyPage } from "./FireflyPage";
 import { CardPage } from "./CardPage";
 import { RunPage } from "./RunPage";
+import { EvePage } from "./EvePage";
 import { makeCard } from "@/lib/card/card";
 import { getSky } from "@/lib/sky";
 import { boothSky } from "@/lib/booth/strip";
@@ -65,6 +66,11 @@ const LEARNED: Record<number, string[]> = {
     "a fixed-timestep loop spends real time in whole 1/60 s steps, so the game plays the same at any refresh rate and a replay is just the frames where the button went down and up",
     "a robot player in the tests proves every day's course can be finished, and it caught an awning that launched Mochi straight into a wall",
     "a few frames of grace before an edge (coyote time) and before landing (a jump buffer) make jumps feel fair",
+  ],
+  10: [
+    "a countdown to a moment in another time zone is just two timestamps: Date.parse with an explicit +05:30 needs no time-zone library",
+    "the lamps are a fraction of the evening gone, rounded down to a number of windows, so every visitor sees the same building at the same moment",
+    "reusing the façade's own drawing data (its strokes and window shapes) puts the building on a new page without redrawing a line",
   ],
 };
 
@@ -169,6 +175,15 @@ export default async function DoorPage({ params, searchParams }: Params) {
     return (
       <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
         <BoothPage sky={boothSky(sky.phase, sky.raining)} tempC={sky.tempC} />
+      </DoorFrame>
+    );
+  }
+
+  // Door 10: birthday eve.
+  if (n === 10) {
+    return (
+      <DoorFrame n={n} title={DOOR_META[n].title} dateLabel={label} backLink={back} learned={learned}>
+        <EvePage />
       </DoorFrame>
     );
   }
